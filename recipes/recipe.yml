@@ -26,6 +26,7 @@ modules:
     install:
       packages:
         - brave-origin
+        - gnome-keyring
         - neovim
         - niri
         - starship
