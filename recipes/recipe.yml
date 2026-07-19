@@ -33,6 +33,7 @@ modules:
         - chezmoi
         - distrobox
         - fish
+        - fwupd
         - git
         - gnome-keyring
         - google-noto-color-emoji-fonts
@@ -60,8 +61,10 @@ modules:
         - thunar-archive-plugin
         - thunar-volman
         - tmux
+        - tuned-ppd
         - tuigreet
         - unzip
+        - upower
         - wireplumber
         - wl-clipboard
         - xarchiver
