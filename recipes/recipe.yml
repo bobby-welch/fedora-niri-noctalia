@@ -25,6 +25,7 @@ modules:
         - atim/starship
     install:
       packages:
+        - 7zip
         - alacritty
         - bluez
         - brave-origin
@@ -36,6 +37,8 @@ modules:
         - gnome-keyring
         - greetd
         - greetd-selinux
+        - gvfs-fuse
+        - gvfs-mtp
         - NetworkManager
         - NetworkManager-wifi
         - neovim
@@ -49,13 +52,19 @@ modules:
         - polkit
         - starship
         - swayimg
+        - Thunar
+        - thunar-archive-plugin
+        - thunar-volman
         - tmux
         - tuigreet
+        - unzip
         - wireplumber
         - wl-clipboard
+        - xarchiver
         - xdg-desktop-portal-gnome
         - xdg-desktop-portal-gtk
         - xdg-utils
+        - zip
 
     remove:
       packages:
