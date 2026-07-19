@@ -27,6 +27,7 @@ modules:
       packages:
         - brave-origin
         - neovim
+        - niri
         - starship
         - swayimg
     remove:
