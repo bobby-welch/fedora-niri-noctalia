@@ -26,18 +26,25 @@ modules:
     install:
       packages:
         - alacritty
+        - bluez
         - brave-origin
         - brightnessctl
         - gnome-keyring
         - greetd
         - greetd-selinux
+        - NetworkManager
+        - NetworkManager-wifi
         - neovim
         - niri
         - noctalia
+        - pipewire
+        - pipewire-pulseaudio
         - playerctl
+        - polkit
         - starship
         - swayimg
         - tuigreet
+        - wireplumber
         - wl-clipboard
         - xdg-desktop-portal-gnome
         - xdg-desktop-portal-gtk
