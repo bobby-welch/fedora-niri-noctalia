@@ -29,6 +29,9 @@ modules:
         - bluez
         - brave-origin
         - brightnessctl
+        - chezmoi
+        - distrobox
+        - git
         - gnome-keyring
         - greetd
         - greetd-selinux
@@ -40,6 +43,7 @@ modules:
         - pipewire
         - pipewire-pulseaudio
         - playerctl
+        - podman
         - polkit
         - starship
         - swayimg
