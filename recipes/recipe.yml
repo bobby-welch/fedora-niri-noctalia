@@ -25,18 +25,23 @@ modules:
         - atim/starship
     install:
       packages:
+        - alacritty
         - brave-origin
+        - brightnessctl
         - gnome-keyring
         - greetd
         - greetd-selinux
         - neovim
         - niri
         - noctalia
+        - playerctl
         - starship
         - swayimg
         - tuigreet
+        - wl-clipboard
         - xdg-desktop-portal-gnome
         - xdg-desktop-portal-gtk
+        - xdg-utils
 
     remove:
       packages:
