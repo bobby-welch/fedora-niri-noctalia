@@ -35,6 +35,9 @@ modules:
         - fish
         - git
         - gnome-keyring
+        - google-noto-color-emoji-fonts
+        - google-noto-sans-vf-fonts
+        - google-noto-serif-vf-fonts
         - greetd
         - greetd-selinux
         - gvfs-fuse
@@ -50,6 +53,7 @@ modules:
         - playerctl
         - podman
         - polkit
+        - rsms-inter-fonts
         - starship
         - swayimg
         - Thunar
@@ -71,7 +75,12 @@ modules:
         # base-main normally does not include Firefox; remove it defensively in case that changes upstream
         - firefox
         - firefox-langpacks
-
+  
+  - type: fonts
+    fonts:
+      nerd-fonts:
+        - IosevkaTerm
+        
   - type: systemd
     system:
       enabled:
