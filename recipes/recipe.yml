@@ -30,6 +30,9 @@ modules:
         - niri
         - starship
         - swayimg
+        - xdg-desktop-portal-gnome
+        - xdg-desktop-portal-gtk
+
     remove:
       packages:
         # base-main normally does not include Firefox; remove it defensively in case that changes upstream
