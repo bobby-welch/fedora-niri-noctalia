@@ -31,6 +31,7 @@ modules:
         - brightnessctl
         - chezmoi
         - distrobox
+        - fish
         - git
         - gnome-keyring
         - greetd
@@ -40,6 +41,7 @@ modules:
         - neovim
         - niri
         - noctalia
+        - openssh-clients
         - pipewire
         - pipewire-pulseaudio
         - playerctl
@@ -47,6 +49,7 @@ modules:
         - polkit
         - starship
         - swayimg
+        - tmux
         - tuigreet
         - wireplumber
         - wl-clipboard
