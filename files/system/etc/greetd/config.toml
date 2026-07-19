@@ -1,0 +1,47 @@
+# greetd configuration for the Niri desktop session.
+#
+# This file is installed at:
+#   /etc/greetd/config.toml
+#
+# greetd starts a login prompt on a virtual terminal, then launches
+# the selected desktop session after successful authentication.
+
+[terminal]
+
+# Run greetd on virtual terminal 1.
+#
+# You can switch to other virtual terminals with:
+#   Ctrl+Alt+F2
+#   Ctrl+Alt+F3
+#   etc.
+vt = 1
+
+
+[default_session]
+
+# Start tuigreet as the interactive login screen.
+#
+# Options:
+#   --time
+#     Display the current date and time.
+#
+#   --asterisks
+#     Show asterisks while the password is entered instead of leaving
+#     the password field visually blank.
+#
+#   --remember
+#     Remember the most recently entered username.
+#
+#   --remember-user-session
+#     Remember the last selected session separately for each user.
+#
+#   --cmd niri-session
+#     Start Niri through its packaged session wrapper.
+#     This is preferred over launching the bare `niri` executable because
+#     `niri-session` sets up the systemd and D-Bus graphical-session
+#     environment expected by portals and desktop services.
+command = "tuigreet --time --asterisks --remember --remember-user-session --cmd niri-session"
+
+# Run the greeter itself under greetd's unprivileged greeter account.
+# After authentication, greetd launches the session as the logged-in user.
+user = "greeter"
