@@ -38,7 +38,6 @@ modules:
   - type: default-flatpaks
     configurations:
       - notify: true # Send notification after install/uninstall is finished (true/false)
-        scope: system
-      - scope: user # Also add Flathub user repo, but no user packages
+        scope: user # Add Flathub user repo
 
   - type: signing # this sets up the proper policy & signing files for signed images to work fully
