@@ -27,10 +27,13 @@ modules:
       packages:
         - brave-origin
         - gnome-keyring
+        - greetd
+        - greetd-selinux
         - neovim
         - niri
         - starship
         - swayimg
+        - tuigreet
         - xdg-desktop-portal-gnome
         - xdg-desktop-portal-gtk
 
