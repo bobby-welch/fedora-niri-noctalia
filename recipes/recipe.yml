@@ -26,13 +26,16 @@ modules:
         - 7zip
         - age
         - alacritty
+        - bat
         - bluez
         - brave-origin
         - brightnessctl
         - chezmoi
         - distrobox
+        - fd-find
         - fish
         - fwupd
+        - fzf
         - git
         - gnome-keyring
         - gnome-keyring-pam
@@ -43,6 +46,7 @@ modules:
         - greetd-selinux
         - gvfs-fuse
         - gvfs-mtp
+        - htop
         - NetworkManager
         - NetworkManager-wifi
         - neovim
@@ -54,6 +58,8 @@ modules:
         - playerctl
         - podman
         - polkit
+        - rclone
+        - ripgrep
         - rsms-inter-fonts
         - starship
         - swayimg
