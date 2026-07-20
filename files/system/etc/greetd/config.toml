@@ -44,4 +44,4 @@ command = "tuigreet --time --asterisks --remember --remember-user-session --cmd 
 
 # Run the greeter itself under greetd's unprivileged greeter account.
 # After authentication, greetd launches the session as the logged-in user.
-user = "greeter"
+user = "greetd"
