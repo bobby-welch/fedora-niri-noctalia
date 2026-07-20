@@ -34,6 +34,7 @@ modules:
         - fwupd
         - git
         - gnome-keyring
+        - gnome-keyring-pam
         - google-noto-color-emoji-fonts
         - google-noto-sans-vf-fonts
         - google-noto-serif-vf-fonts
