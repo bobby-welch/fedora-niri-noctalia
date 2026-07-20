@@ -24,6 +24,7 @@ modules:
     install:
       packages:
         - 7zip
+        - age
         - alacritty
         - bluez
         - brave-origin
