@@ -34,6 +34,8 @@ modules:
         - distrobox
         - fd-find
         - fish
+        - fprintd
+        - fprintd-pam
         - fwupd
         - fzf
         - git
