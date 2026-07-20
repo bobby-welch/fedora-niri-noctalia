@@ -93,5 +93,9 @@ modules:
     configurations:
       - notify: true # Send notification after install/uninstall is finished (true/false)
         scope: user # Add Flathub user repo
+        install:
+          - io.github.lullabyX.sone
+          - md.obsidian.Obsidian
+          - org.libreoffice.LibreOffice
 
   - type: signing # this sets up the proper policy & signing files for signed images to work fully
