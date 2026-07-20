@@ -1,28 +1,26 @@
 ---
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# image will be published to ghcr.io/<user>/<name>
+
 name: fedora-niri-noctalia
-# description will be included in the image's metadata
 description: A personal Fedora Atomic desktop image built around Niri and Noctalia.
 
-# the base image to build on top of (FROM) and the version tag to use
 base-image: ghcr.io/ublue-os/base-main
 image-version: 44
 
-# module configuration, executed in order
-# you can include multiple instances of the same module
 modules:
+  # Copy image-level configuration from files/system/ into the image root.
   - type: files
     files:
       - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
-  
+        destination: /
+
   - type: dnf
     repos:
       files:
         - https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
       copr:
         - atim/starship
+
     install:
       packages:
         - 7zip
@@ -75,15 +73,15 @@ modules:
 
     remove:
       packages:
-        # base-main normally does not include Firefox; remove it defensively in case that changes upstream
+        # base-main normally omits Firefox; remove it defensively in case that changes upstream.
         - firefox
         - firefox-langpacks
-  
+
   - type: fonts
     fonts:
       nerd-fonts:
         - IosevkaTerm
-        
+
   - type: systemd
     system:
       enabled:
@@ -91,11 +89,11 @@ modules:
 
   - type: default-flatpaks
     configurations:
-      - notify: true # Send notification after install/uninstall is finished (true/false)
-        scope: user # Add Flathub user repo
+      - notify: true
+        scope: user
         install:
           - io.github.lullabyX.sone
           - md.obsidian.Obsidian
           - org.libreoffice.LibreOffice
 
-  - type: signing # this sets up the proper policy & signing files for signed images to work fully
+  - type: signing
