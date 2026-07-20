@@ -90,7 +90,7 @@ modules:
 
   - type: default-flatpaks
     configurations:
-      - notify: true
+      - notify: false
         scope: user
         install:
           - io.github.lullabyX.sone
