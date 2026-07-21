@@ -50,6 +50,7 @@ modules:
         - gvfs-mtp
         - gvfs-smb
         - htop
+        - nautilus
         - NetworkManager
         - NetworkManager-wifi
         - neovim
