@@ -45,8 +45,10 @@ modules:
         - google-noto-serif-vf-fonts
         - greetd
         - greetd-selinux
+        - gvfs-archive
         - gvfs-fuse
         - gvfs-mtp
+        - gvfs-smb
         - htop
         - NetworkManager
         - NetworkManager-wifi
@@ -64,9 +66,6 @@ modules:
         - rsms-inter-fonts
         - starship
         - swayimg
-        - Thunar
-        - thunar-archive-plugin
-        - thunar-volman
         - tmux
         - tuned-ppd
         - tuigreet
@@ -74,7 +73,6 @@ modules:
         - upower
         - wireplumber
         - wl-clipboard
-        - xarchiver
         - xdg-desktop-portal-gnome
         - xdg-desktop-portal-gtk
         - xdg-utils
