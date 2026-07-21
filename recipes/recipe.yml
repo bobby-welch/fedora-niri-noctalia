@@ -67,6 +67,9 @@ modules:
         - rsms-inter-fonts
         - starship
         - swayimg
+        - Thunar
+        - thunar-archive-plugin
+        - thunar-volman
         - tmux
         - tuned-ppd
         - tuigreet
@@ -74,6 +77,7 @@ modules:
         - upower
         - wireplumber
         - wl-clipboard
+        - xarchiver
         - xdg-desktop-portal-gnome
         - xdg-desktop-portal-gtk
         - xdg-utils
