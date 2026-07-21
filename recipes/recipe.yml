@@ -24,6 +24,7 @@ modules:
     install:
       packages:
         - 7zip
+        - adw-gtk3-theme
         - age
         - alacritty
         - bat
@@ -104,6 +105,8 @@ modules:
         install:
           - io.github.lullabyX.sone
           - md.obsidian.Obsidian
+          - org.gtk.Gtk3theme.adw-gtk3
+          - org.gtk.Gtk3theme.adw-gtk3-dark
           - org.libreoffice.LibreOffice
 
   - type: signing
