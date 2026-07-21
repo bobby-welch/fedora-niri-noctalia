@@ -72,6 +72,7 @@ modules:
         - tuigreet
         - unzip
         - upower
+        - util-linux
         - wireplumber
         - wl-clipboard
         - xdg-desktop-portal-gnome
