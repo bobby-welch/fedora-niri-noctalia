@@ -29,6 +29,7 @@ modules:
         - alacritty
         - bat
         - bluez
+        - brave
         - brave-origin
         - brightnessctl
         - chezmoi
