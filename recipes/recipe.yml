@@ -29,7 +29,7 @@ modules:
         - alacritty
         - bat
         - bluez
-        - brave
+        - brave-browser
         - brave-origin
         - brightnessctl
         - chezmoi
