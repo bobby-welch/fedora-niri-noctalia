@@ -104,7 +104,7 @@ modules:
   - type: default-flatpaks
     configurations:
       - notify: false
-        scope: user
+        scope: system
         install:
           - io.github.lullabyX.sone
           - md.obsidian.Obsidian
