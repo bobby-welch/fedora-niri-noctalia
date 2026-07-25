@@ -13,8 +13,11 @@ This setup performs a one-way hourly sync from one designated laptop to pCloud.
 The `eBooks:` remote encrypts file contents while intentionally leaving
 filenames, directory names, and directory structure visible.
 
-pCloud Trash and file history provide recovery. The sync does not use
-`--backup-dir` or separate archive directories.
+This is synchronization, not a complete backup. Destination-only files can be
+deleted so the remote matches the local source. Recovery also depends on the
+retention available from pCloud Trash and file history.
+
+The sync does not use `--backup-dir` or separate archive directories.
 
 ## Design
 
@@ -372,7 +375,8 @@ rclone sync \
     --log-level=ERROR
 ```
 
-Review all proposed uploads, updates, and deletions carefully.
+Review all proposed uploads, updates, and deletions carefully. In particular,
+confirm that destination-only files marked for deletion are genuinely obsolete.
 
 ### 9. Designate the primary laptop
 

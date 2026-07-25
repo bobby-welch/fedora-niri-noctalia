@@ -144,7 +144,8 @@ Expected mode:
 
 ```fish
 ssh -G github.com 2>/dev/null \
-    | rg '^(hostname|user|identityfile|identitiesonly|addkeystoagent|forwardagent) '
+    | rg '^(hostname|user|identityfile|identitiesonly|'\
+'addkeystoagent|forwardagent) '
 ```
 
 Expected essentials:
@@ -170,7 +171,8 @@ Verify the displayed fingerprint against GitHub’s published fingerprints befor
 accepting it.
 
 A successful authentication reports that GitHub recognized the account but does
-not provide shell access.
+not provide shell access. GitHub intentionally returns exit status `1` for this
+test even when authentication succeeds, so judge the result by the message.
 
 ## 7. Verify the dotfiles repository
 

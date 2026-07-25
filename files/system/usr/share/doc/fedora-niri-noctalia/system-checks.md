@@ -29,7 +29,7 @@ rclone-sync-status
 
 A healthy system should have:
 
-- an active deployment from the expected BlueBuild image;
+- the expected BlueBuild image booted;
 - no chezmoi differences;
 - a clean dotfiles repository;
 - no unexpected failed user units;
@@ -480,19 +480,16 @@ flatpak list --app \
 
 The intended applications should appear once under the `system` installation.
 
-Current expected applications include:
+Image-managed applications currently include:
 
 ```text
-app.zen_browser.zen
-com.mastermindzh.tidal-hifi
-com.onepassword.OnePassword
-com.sigil_ebook.Sigil
-com.spotify.Client
 io.github.lullabyX.sone
 md.obsidian.Obsidian
 org.libreoffice.LibreOffice
-org.mozilla.firefox
 ```
+
+Additional personal applications may also be installed at system scope, but
+their presence is not required for the BlueBuild image itself to be healthy.
 
 Check for duplicate app installations:
 

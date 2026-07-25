@@ -161,8 +161,8 @@ The high-level sequence is:
 1. Enable the systemd SSH-agent socket.
 2. Generate a new per-device Ed25519 key.
 3. Add the public key to GitHub.
-4. verify GitHub authentication.
-5. confirm the managed SSH configuration after chezmoi is applied.
+4. Verify GitHub authentication.
+5. Confirm the managed SSH configuration after chezmoi is applied.
 
 Enable the SSH agent:
 

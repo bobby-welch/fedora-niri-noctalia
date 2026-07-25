@@ -293,13 +293,7 @@ chezmoi status
 
 ### Pull and apply remote changes
 
-```fish
-chezmoi update
-```
-
-This pulls the source repository and applies the resulting changes.
-
-For more control, separate the steps:
+Use the review-first workflow by default:
 
 ```fish
 git -C ~/.local/share/chezmoi pull --ff-only
@@ -307,7 +301,14 @@ chezmoi diff
 chezmoi apply
 ```
 
-The separated workflow is safer when reviewing changes from another machine.
+This keeps retrieval and application separate so remote changes can be reviewed
+before they affect the home directory.
+
+For a trusted change set that should be pulled and applied in one step:
+
+```fish
+chezmoi update
+```
 
 ## Inspect managed state
 
