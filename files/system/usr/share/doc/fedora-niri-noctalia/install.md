@@ -1,6 +1,7 @@
 # Fedora Niri Noctalia Installation Guide
 
-This is the master checklist for rebuilding the complete system.
+This is the master checklist for configuring and restoring the complete system
+after installing the Fedora Niri Noctalia image.
 
 Detailed subsystem instructions are kept in separate guides:
 
@@ -47,30 +48,32 @@ Dotfiles repository:
 git@github.com:bobby-welch/dotfiles.git
 ```
 
-## 1. Install the BlueBuild image
+## 1. Verify the installed BlueBuild image
 
-Use the current documented installation or rebase procedure from the BlueBuild
-repository.
+This guide assumes the image has already been installed from the installer USB
+and the system has booted successfully.
 
-After booting the custom image, verify:
+Verify the booted image:
 
 ```fish
-rpm-ostree status
+sudo bootc status
 ```
 
-The active deployment should reference:
+The output should show:
 
 ```text
-ghcr.io/bobby-welch/fedora-niri-noctalia:latest
+● Booted image: ghcr.io/bobby-welch/fedora-niri-noctalia:latest
 ```
 
-The active deployment is marked with `●`.
+The output also identifies the exact image with its digest and version.
 
-Verify that the system is idle:
+A previous deployment may appear as:
 
 ```text
-State: idle
+Rollback image:
 ```
+
+A downloaded update that has not yet been booted appears as a staged deployment.
 
 Do not layer ordinary desktop packages manually. Package selection belongs in:
 
@@ -124,13 +127,15 @@ Confirm internet access:
 ping -c 3 github.com
 ```
 
-Update the current deployment metadata:
+Verify the current deployment:
 
 ```fish
-rpm-ostree status
+sudo bootc status
 ```
 
-Do not use `dnf upgrade` or `dnf install` for routine host management.
+Do not use `dnf upgrade` or `dnf install` for routine host management. Host
+package selection belongs in the BlueBuild recipe, and image updates are managed
+with `bootc`.
 
 ## 4. Sign in to 1Password
 
@@ -301,7 +306,8 @@ Verify the managed GitHub configuration:
 
 ```fish
 ssh -G github.com 2>/dev/null \
-    | rg '^(hostname|user|identityfile|identitiesonly|addkeystoagent|forwardagent) '
+    | rg '^(hostname|user|identityfile|identitiesonly|'\
+'addkeystoagent|forwardagent) '
 ```
 
 Expected essentials:
@@ -841,7 +847,9 @@ GitHub Actions builds the image:
 - when relevant repository changes are pushed;
 - when manually triggered.
 
-Documentation-only changes do not trigger a rebuild.
+Changes only to the root `README.md` do not trigger an image build. Changes to
+bundled documentation under `files/system/` do trigger a build because those
+files are included in the image.
 
 ## 24. Final validation
 
@@ -852,7 +860,7 @@ Follow:
 At minimum, run:
 
 ```fish
-rpm-ostree status
+sudo bootc status
 
 chezmoi status
 
@@ -894,19 +902,62 @@ A completed installation should have:
 ### Update the system
 
 BlueBuild images are rebuilt through GitHub Actions and delivered as Atomic
-deployments.
+deployments. Automatic bootc updates are disabled, so updates are applied
+manually.
 
-Check:
+Check whether an update is available without downloading the full image:
 
 ```fish
-rpm-ostree status
+sudo bootc upgrade --check
 ```
 
-Reboot when a new deployment has been staged:
+Download and queue an available update:
+
+```fish
+sudo bootc upgrade
+```
+
+Inspect the booted, staged, and rollback images:
+
+```fish
+sudo bootc status
+```
+
+A queued update appears as a staged deployment. Reboot to activate it:
 
 ```fish
 systemctl reboot
 ```
+
+To download an available update and reboot into it immediately:
+
+```fish
+sudo bootc upgrade --apply
+```
+
+### Roll back the system
+
+Inspect the available booted and rollback images:
+
+```fish
+sudo bootc status
+```
+
+Queue the rollback image for the next boot:
+
+```fish
+sudo bootc rollback
+systemctl reboot
+```
+
+To apply the rollback immediately:
+
+```fish
+sudo bootc rollback --apply
+```
+
+A rollback discards an unapplied staged update. Files under `/etc` revert to the
+state associated with the rollback deployment.
 
 ### Update dotfiles
 
