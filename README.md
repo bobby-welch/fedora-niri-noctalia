@@ -1,43 +1,106 @@
-# fedora-niri-noctalia &nbsp; [![bluebuild build badge](https://github.com/bobby-welch/fedora-niri-noctalia/actions/workflows/build.yml/badge.svg)](https://github.com/bobby-welch/fedora-niri-noctalia/actions/workflows/build.yml)
+# Fedora Niri Noctalia
 
-See the [BlueBuild docs](https://blue-build.org/how-to/setup/) for quick setup instructions for setting up your own repository based on this template.
+[![BlueBuild build status](https://github.com/bobby-welch/fedora-niri-noctalia/actions/workflows/build.yml/badge.svg)](https://github.com/bobby-welch/fedora-niri-noctalia/actions/workflows/build.yml)
 
-After setup, it is recommended you update this README to describe your custom image.
+A personal Fedora Atomic desktop image built around Niri and Noctalia.
 
-## Installation
+## Documentation
 
-> [!WARNING]  
-> [This is an experimental feature](https://www.fedoraproject.org/wiki/Changes/OstreeNativeContainerStable), try at your own discretion.
+The complete rebuild documentation is included in this repository and installed
+with the image.
 
-To rebase an existing atomic Fedora installation to the latest build:
+- [Complete installation guide](files/system/usr/share/doc/fedora-niri-noctalia/install.md)
+- [SSH and GitHub setup](files/system/usr/share/doc/fedora-niri-noctalia/ssh-github.md)
+- [Chezmoi setup and workflow](files/system/usr/share/doc/fedora-niri-noctalia/chezmoi.md)
+- [rclone setup](files/system/usr/share/doc/fedora-niri-noctalia/rclone.md)
+- [System health checks](files/system/usr/share/doc/fedora-niri-noctalia/system-checks.md)
 
-- First rebase to the unsigned image, to get the proper signing keys and policies installed:
-  ```
-  rpm-ostree rebase ostree-unverified-registry:ghcr.io/bobby-welch/fedora-niri-noctalia:latest
-  ```
-- Reboot to complete the rebase:
-  ```
-  systemctl reboot
-  ```
-- Then rebase to the signed image, like so:
-  ```
-  rpm-ostree rebase ostree-image-signed:docker://ghcr.io/bobby-welch/fedora-niri-noctalia:latest
-  ```
-- Reboot again to complete the installation
-  ```
-  systemctl reboot
-  ```
-
-The `latest` tag will automatically point to the latest build. That build will still always use the Fedora version specified in `recipe.yml`, so you won't get accidentally updated to the next major version.
-
-## ISO
-
-If build on Fedora Atomic, you can generate an offline ISO with the instructions available [here](https://blue-build.org/how-to/generate-iso/#_top). These ISOs cannot unfortunately be distributed on GitHub for free due to large sizes, so for public projects something else has to be used for hosting.
-
-## Verification
-
-These images are signed with [Sigstore](https://www.sigstore.dev/)'s [cosign](https://github.com/sigstore/cosign). You can verify the signature by downloading the `cosign.pub` file from this repo and running the following command:
+After the image is installed, open the local guide with:
 
 ```bash
-cosign verify --key cosign.pub ghcr.io/bobby-welch/fedora-niri-noctalia
+nvim /usr/share/doc/fedora-niri-noctalia/install.md
+```
+
+## Install on an existing Fedora Atomic system
+
+First switch to the unsigned image so the image-provided signing policy and
+public key are installed:
+
+```bash
+rpm-ostree rebase \
+    ostree-unverified-registry:ghcr.io/bobby-welch/fedora-niri-noctalia:latest
+```
+
+Reboot:
+
+```bash
+systemctl reboot
+```
+
+Then switch to the signed image:
+
+```bash
+rpm-ostree rebase \
+    ostree-image-signed:docker://ghcr.io/bobby-welch/fedora-niri-noctalia:latest
+```
+
+Reboot again:
+
+```bash
+systemctl reboot
+```
+
+Verify the active deployment:
+
+```bash
+rpm-ostree status
+```
+
+The active deployment should reference:
+
+```text
+ghcr.io/bobby-welch/fedora-niri-noctalia:latest
+```
+
+and use the signed transport:
+
+```text
+ostree-image-signed:docker://
+```
+
+## Image source
+
+The main recipe is:
+
+```text
+recipes/recipe.yml
+```
+
+GitHub Actions builds the image:
+
+- daily;
+- when relevant repository changes are pushed;
+- when manually triggered.
+
+The Fedora major version remains pinned by `image-version` in the recipe.
+
+## Rollback
+
+Fedora Atomic retains the previous deployment.
+
+Select the previous deployment from the boot menu, or run:
+
+```bash
+rpm-ostree rollback
+systemctl reboot
+```
+
+## Signature verification
+
+The image is signed with Sigstore cosign.
+
+```bash
+cosign verify \
+    --key cosign.pub \
+    ghcr.io/bobby-welch/fedora-niri-noctalia
 ```
