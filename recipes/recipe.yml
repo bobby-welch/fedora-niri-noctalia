@@ -34,6 +34,7 @@ modules:
         - brightnessctl
         - chezmoi
         - distrobox
+        - eza
         - fd-find
         - fish
         - fwupd
