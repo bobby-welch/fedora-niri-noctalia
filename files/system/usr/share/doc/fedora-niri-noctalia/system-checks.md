@@ -16,7 +16,7 @@ Use it after:
 Run:
 
 ```fish
-rpm-ostree status
+sudo bootc status
 
 chezmoi status
 
@@ -37,36 +37,37 @@ A healthy system should have:
 
 ## 1. Verify the BlueBuild deployment
 
-```fish
-rpm-ostree status
-```
-
-The active deployment should reference:
-
-```text
-ghcr.io/bobby-welch/fedora-niri-noctalia
-```
-
-The active deployment is marked with:
-
-```text
-●
-```
-
-Normal output should also report:
-
-```text
-State: idle
-```
-
-Check whether an update has been staged:
+Inspect the current deployment:
 
 ```fish
-rpm-ostree status
+sudo bootc status
 ```
 
-If two deployments are listed, the second one is normally the previous
-deployment retained for rollback.
+The output should identify the expected booted image:
+
+```text
+● Booted image: ghcr.io/bobby-welch/fedora-niri-noctalia:latest
+```
+
+The digest and version identify the exact image currently running.
+
+A previous deployment may appear as:
+
+```text
+Rollback image:
+```
+
+A downloaded update that has not yet been activated appears as a staged
+deployment.
+
+Check for a newer image without downloading its full layers:
+
+```fish
+sudo bootc upgrade --check
+```
+
+Automatic bootc updates are disabled on this image, so updates are applied
+manually.
 
 ## 2. Verify core commands
 
@@ -193,7 +194,8 @@ Verify the GitHub SSH configuration:
 
 ```fish
 ssh -G github.com 2>/dev/null \
-    | rg '^(hostname|user|identityfile|identitiesonly|addkeystoagent|forwardagent) '
+    | rg '^(hostname|user|identityfile|identitiesonly|'\
+'addkeystoagent|forwardagent) '
 ```
 
 Expected essentials:
@@ -718,7 +720,7 @@ crashes, and services that affect the current setup.
 
 A fully healthy system should satisfy all of the following:
 
-- BlueBuild deployment is active and idle.
+- The expected BlueBuild image is booted.
 - Core commands are present.
 - Chezmoi reports no differences.
 - The dotfiles Git repository is clean.
