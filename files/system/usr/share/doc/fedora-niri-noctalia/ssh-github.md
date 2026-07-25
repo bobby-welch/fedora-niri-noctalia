@@ -1,6 +1,8 @@
 # SSH and GitHub Setup
 
-This guide configures SSH authentication for GitHub on a new or rebuilt laptop.
+This guide configures and troubleshoots SSH authentication for GitHub on a new
+or rebuilt laptop. For the normal happy path, see
+[Quick Installation](quick-install.md).
 
 Each laptop should have its own SSH key. Do not copy a private SSH key from
 another computer.

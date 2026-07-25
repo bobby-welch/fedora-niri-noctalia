@@ -84,7 +84,7 @@ The private age identity must never be committed to Git.
 After GitHub SSH authentication and the age identity are ready:
 
 ```fish
-chezmoi init --apply bobby-welch
+chezmoi init --apply git@github.com:bobby-welch/dotfiles.git
 ```
 
 This command:
@@ -230,7 +230,7 @@ chezmoi apply
 
 ## System documentation
 
-The complete installation and recovery guides are maintained in the BlueBuild
+The quick-install and detailed recovery guides are maintained in the BlueBuild
 repository and installed with the image at:
 
 ```text
@@ -529,7 +529,7 @@ intact:
 
 1. move the source directory aside;
 2. ensure GitHub SSH and the age identity work;
-3. run `chezmoi init bobby-welch`;
+3. run `chezmoi init git@github.com:bobby-welch/dotfiles.git`;
 4. inspect with `chezmoi diff`;
 5. apply only after reviewing the proposed changes.
 

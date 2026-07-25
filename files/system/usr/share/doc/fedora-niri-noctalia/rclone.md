@@ -236,7 +236,7 @@ Do not continue if the recipient differs.
 Initialize and apply the dotfiles repository:
 
 ```fish
-chezmoi init --apply bobby-welch
+chezmoi init --apply git@github.com:bobby-welch/dotfiles.git
 ```
 
 The repository’s `.chezmoi.toml.tmpl` configures age encryption and uses:
@@ -295,20 +295,36 @@ rclone lsf eBooks: \
 
 The eBooks listing should show normal decrypted names.
 
-### 5. Verify source directories
+### 5. Restore synchronized directories
+
+Create the local directories:
+
+```fish
+mkdir -p ~/Documents ~/Pictures ~/eBooks
+```
+
+On a fresh installation, restore the remote contents without deleting anything
+from the local destination:
+
+```fish
+rclone copy pcloud:Documents ~/Documents --progress
+rclone copy pcloud:Pictures ~/Pictures --progress
+rclone copy eBooks: ~/eBooks --progress
+```
+
+The `eBooks:` command decrypts names and file contents while restoring them.
+
+Inspect the restored data:
 
 ```fish
 for dir in ~/Documents ~/Pictures ~/eBooks
-    if test -d $dir
-        printf 'OK: %s\n' $dir
-    else
-        printf 'MISSING: %s\n' $dir
-    end
+    printf '\n=== %s ===\n' $dir
+    find $dir -mindepth 1 -maxdepth 2 | head -n 20
 end
 ```
 
-Do not enable syncing until all three directories exist and contain the intended
-authoritative data.
+Do not enable synchronization until all three directories contain the intended
+authoritative local data.
 
 ### 6. Reload systemd
 

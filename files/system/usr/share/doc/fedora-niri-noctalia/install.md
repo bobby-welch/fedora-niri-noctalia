@@ -1,7 +1,10 @@
-# Fedora Niri Noctalia Installation Guide
+# Detailed Fedora Niri Noctalia Installation and Recovery Guide
 
-This is the master checklist for configuring and restoring the complete system
-after installing the Fedora Niri Noctalia image.
+This is the comprehensive reference for configuring, restoring, verifying, and
+troubleshooting the system after installing the Fedora Niri Noctalia image.
+
+For a routine rebuild, start with [Quick Installation](quick-install.md). Return
+to this guide when a quick-install step fails or needs more explanation.
 
 Detailed subsystem instructions are kept in separate guides:
 
@@ -247,7 +250,7 @@ Follow:
 Initialize and apply the repository:
 
 ```fish
-chezmoi init --apply bobby-welch
+chezmoi init --apply git@github.com:bobby-welch/dotfiles.git
 ```
 
 This should:
@@ -337,13 +340,16 @@ Check for failures:
 systemctl --user --failed --no-pager
 ```
 
-Enable the general-purpose units:
+Enable the required general-purpose unit:
 
 ```fish
 systemctl --user enable --now ssh-agent.socket
-systemctl --user enable --now playerctld.service
-systemctl --user enable --now swayidle.service
 ```
+
+Noctalia v5 handles MPRIS media selection directly and provides native idle,
+lock, monitor-power, and suspend behaviors. Do not enable
+`playerctld.service` or `swayidle.service` unless the configuration
+deliberately depends on those optional external services.
 
 Do not enable the rclone timer yet.
 
@@ -366,12 +372,23 @@ spawn-at-startup "noctalia"
 
 A separate Noctalia systemd service is not expected.
 
-Verify Noctalia:
+Validate and verify Noctalia:
 
 ```fish
+noctalia config validate
 pgrep -a noctalia
 noctalia msg status
 noctalia msg theme-mode-get
+```
+
+Noctalia's built-in idle behaviors are disabled by default until configured.
+Enable the desired lock, monitor-off, or suspend behaviors in Noctalia before
+relying on them.
+
+Test the lock screen:
+
+```fish
+noctalia msg session lock
 ```
 
 Test the launcher:
@@ -660,7 +677,18 @@ for dir in ~/Documents ~/Pictures ~/eBooks
 end
 ```
 
-These directories must contain the intended authoritative local data.
+If this is a fresh installation and the local directories are empty, restore
+their contents from the remote without deleting local files:
+
+```fish
+rclone copy pcloud:Documents ~/Documents --progress
+rclone copy pcloud:Pictures ~/Pictures --progress
+rclone copy eBooks: ~/eBooks --progress
+```
+
+`rclone copy` is deliberately used for restoration because it does not delete
+destination-only files. After restoration, inspect the directories and treat
+the verified local copies as authoritative.
 
 Do not create the rclone primary-writer marker merely to make the status command
 look healthy.

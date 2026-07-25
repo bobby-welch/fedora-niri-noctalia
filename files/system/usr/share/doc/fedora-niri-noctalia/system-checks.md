@@ -216,7 +216,8 @@ ssh -T git@github.com
 ```
 
 GitHub should recognize the account and report that shell access is not
-provided.
+provided. The test intentionally exits with status `1`, so evaluate the
+authentication message rather than the exit status.
 
 ## 6. Verify user services
 
@@ -236,20 +237,22 @@ List important user units:
 
 ```fish
 systemctl --user list-unit-files --no-pager \
-    | rg '^(niri|playerctld|swayidle|ssh-agent|rclone)'
+    | rg '^(niri|ssh-agent|rclone)'
 ```
 
-Expected enabled units include:
+The required general-purpose enabled unit is:
 
 ```text
-playerctld.service
-swayidle.service
 ssh-agent.socket
-rclone-hourly-sync.timer
 ```
 
-The rclone service and notification service are static units and do not need to
-be enabled directly.
+`rclone-hourly-sync.timer` should be enabled only on the designated primary
+writer. The rclone service and notification service are static units and do not
+need to be enabled directly.
+
+`playerctld.service` and `swayidle.service` are not required by Noctalia v5.
+They should be enabled only when the configuration deliberately uses those
+optional external services.
 
 ## 7. Verify Niri
 
@@ -302,6 +305,12 @@ Check the process:
 
 ```fish
 pgrep -a noctalia
+```
+
+Validate the merged configuration:
+
+```fish
+noctalia config validate
 ```
 
 Check the shell connection:
@@ -415,58 +424,50 @@ systemctl --user --no-pager \
     | rg 'pipewire|wireplumber'
 ```
 
-Check playerctld:
-
-```fish
-systemctl --user status playerctld.service \
-    --no-pager \
-    --lines=0
-```
-
-List media players:
-
-```fish
-playerctl --list-all
-```
-
 Check default audio devices:
 
 ```fish
 wpctl status
 ```
 
-Noctalia media and volume controls should respond through its configured
-keybindings.
+When an MPRIS-capable application is running, list the available players if
+`playerctl` is installed:
+
+```fish
+if command -q playerctl
+    playerctl --list-all
+end
+```
+
+Noctalia v5 selects and controls MPRIS players directly. `playerctld` is
+optional and is not required for Noctalia's media widget or media IPC.
+
+Verify that Noctalia's media widget or configured media keys control the active
+player.
 
 ## 12. Verify idle and lock behavior
 
-Check swayidle:
+Noctalia v5 provides native idle behaviors for locking, monitor power-off, and
+suspend. Its built-in lock and monitor-off behaviors are disabled by default
+until explicitly configured.
+
+Inspect the effective idle configuration:
 
 ```fish
-systemctl --user status swayidle.service \
-    --no-pager \
-    --lines=0
+noctalia config export full \
+    | rg -n '^\[idle|^\[idle\.behavior|enabled|timeout|action'
 ```
 
-It should be enabled and active during the Niri session.
+Confirm that the desired behaviors are enabled with the intended timeouts.
 
-Inspect the unit:
-
-```fish
-systemctl --user cat swayidle.service
-```
-
-Expected behavior includes:
-
-- locking after the configured idle period;
-- powering off monitors after the longer timeout;
-- locking before sleep.
-
-Test locking manually through Noctalia:
+Test locking manually:
 
 ```fish
 noctalia msg session lock
 ```
+
+Do not require `swayidle.service` unless the system deliberately retains that
+optional external idle implementation.
 
 ## 13. Verify Flatpaks
 
@@ -731,7 +732,7 @@ A fully healthy system should satisfy all of the following:
 - Theme switching updates GTK and the appearance portal.
 - GNOME and GTK portals are active.
 - PipeWire and WirePlumber are running.
-- swayidle is active.
+- Noctalia idle and lock behavior is configured as intended.
 - Flatpaks are installed once at the system level.
 - Intended Flatpak overrides remain active.
 - Neovim starts without errors.
