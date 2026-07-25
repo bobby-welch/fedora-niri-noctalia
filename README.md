@@ -15,58 +15,146 @@ with the image.
 - [rclone setup](files/system/usr/share/doc/fedora-niri-noctalia/rclone.md)
 - [System health checks](files/system/usr/share/doc/fedora-niri-noctalia/system-checks.md)
 
-After the image is installed, open the local guide with:
+After installing and booting the image, open the local installation guide:
 
-```bash
+```fish
 nvim /usr/share/doc/fedora-niri-noctalia/install.md
 ```
 
-## Install on an existing Fedora Atomic system
+## Create the installation ISO
 
-First switch to the unsigned image so the image-provided signing policy and
-public key are installed:
+Create a directory for generated installer images:
 
-```bash
-rpm-ostree rebase \
-    ostree-unverified-registry:ghcr.io/bobby-welch/fedora-niri-noctalia:latest
+```fish
+mkdir -p ~/Downloads/ISO
 ```
 
-Reboot:
+Generate an installer ISO from the published BlueBuild image:
 
-```bash
-systemctl reboot
+```fish
+sudo bluebuild generate-iso \
+    --output-dir ~/Downloads/ISO \
+    --iso-name fedora-niri-noctalia.iso \
+    --variant kinoite \
+    image ghcr.io/bobby-welch/fedora-niri-noctalia:latest
 ```
 
-Then switch to the signed image:
+This command installs the Fedora Niri Noctalia image. The Kinoite variant
+selects the installer profile and does not replace the target image with Fedora
+Kinoite.
 
-```bash
-rpm-ostree rebase \
-    ostree-image-signed:docker://ghcr.io/bobby-welch/fedora-niri-noctalia:latest
+The generated files are:
+
+```text
+~/Downloads/ISO/fedora-niri-noctalia.iso
+~/Downloads/ISO/fedora-niri-noctalia.iso-CHECKSUM
 ```
 
-Reboot again:
+Verify the ISO:
 
-```bash
-systemctl reboot
+```fish
+cd ~/Downloads/ISO
+sha256sum --check fedora-niri-noctalia.iso-CHECKSUM
 ```
 
-Verify the active deployment:
+Expected result:
 
-```bash
-rpm-ostree status
+```text
+fedora-niri-noctalia.iso: OK
 ```
 
-The active deployment should reference:
+## Write the ISO to a USB drive
+
+> **Warning**
+>
+> The following procedure erases the entire selected USB drive. Verify the
+> device path carefully before running `dd`.
+
+Before inserting the USB drive, inspect the current block devices:
+
+```fish
+lsblk -o NAME,PATH,SIZE,MODEL,TRAN,RM,FSTYPE,MOUNTPOINTS
+```
+
+Insert the USB drive and run the command again:
+
+```fish
+lsblk -o NAME,PATH,SIZE,MODEL,TRAN,RM,FSTYPE,MOUNTPOINTS
+```
+
+Identify the new device by its size, model, transport, and removable status.
+
+Use the whole device, such as:
+
+```text
+/dev/sdX
+```
+
+Do not use a partition such as:
+
+```text
+/dev/sdX1
+```
+
+Unmount any mounted partitions on the USB drive. Replace `/dev/sdX1` with each
+mounted partition shown by `lsblk`:
+
+```fish
+sudo umount /dev/sdX1
+```
+
+Write the ISO to the whole USB device. Replace `/dev/sdX` with the verified
+device path:
+
+```fish
+sudo dd \
+    if=~/Downloads/ISO/fedora-niri-noctalia.iso \
+    of=/dev/sdX \
+    bs=4M \
+    status=progress \
+    conv=fsync
+```
+
+Do not disconnect the USB drive until `dd` exits successfully.
+
+## Install the image
+
+1. Reboot the computer with the USB drive inserted.
+2. Open the computer’s one-time boot menu.
+3. Select the USB drive.
+4. Start the Fedora installer.
+5. Configure the target disk, user account, locale, and time zone.
+6. Complete the installation.
+7. Remove the USB drive when prompted.
+8. Boot the installed system.
+
+Verify that the expected image is active:
+
+```fish
+sudo bootc status
+```
+
+The booted image should be:
 
 ```text
 ghcr.io/bobby-welch/fedora-niri-noctalia:latest
 ```
 
-and use the signed transport:
+Then continue with:
 
-```text
-ostree-image-signed:docker://
+```fish
+nvim /usr/share/doc/fedora-niri-noctalia/install.md
 ```
+
+## Fallback installation path
+
+If the generated installer cannot boot or install successfully on the target
+hardware, install a supported Fedora Atomic desktop image first and then switch
+that installation to the Fedora Niri Noctalia image.
+
+The direct ISO installation is the preferred workflow. The Fedora Atomic
+bootstrap method is retained only as a recovery path. Follow BlueBuild's current
+rebase documentation rather than relying on commands copied from this README.
 
 ## Image source
 
@@ -78,28 +166,81 @@ recipes/recipe.yml
 
 GitHub Actions builds the image:
 
-- daily;
+- daily at 06:00 UTC;
 - when relevant repository changes are pushed;
 - when manually triggered.
 
+Changes only to the root `README.md` do not trigger an image build. Changes to
+files included in the image, including the bundled documentation under
+`files/system/`, do trigger a build.
+
 The Fedora major version remains pinned by `image-version` in the recipe.
 
-## Rollback
+## Update the installed system
 
-Fedora Atomic retains the previous deployment.
+Check whether an update is available:
 
-Select the previous deployment from the boot menu, or run:
+```fish
+sudo bootc upgrade --check
+```
 
-```bash
-rpm-ostree rollback
+Download and queue an available update:
+
+```fish
+sudo bootc upgrade
+```
+
+Inspect the current and staged deployments:
+
+```fish
+sudo bootc status
+```
+
+Reboot into the staged deployment:
+
+```fish
 systemctl reboot
 ```
 
+To download, queue, and immediately reboot into an available update:
+
+```fish
+sudo bootc upgrade --apply
+```
+
+## Rollback
+
+The previous deployment is retained as the rollback image.
+
+Inspect the available deployments:
+
+```fish
+sudo bootc status
+```
+
+Queue the rollback for the next boot:
+
+```fish
+sudo bootc rollback
+systemctl reboot
+```
+
+To apply the rollback immediately:
+
+```fish
+sudo bootc rollback --apply
+```
+
+A rollback discards an unapplied staged update. Files under `/etc` revert to the
+state associated with the rollback deployment.
+
 ## Signature verification
 
-The image is signed with Sigstore cosign.
+The container image is signed with Sigstore cosign.
 
-```bash
+From the repository root, verify the image with:
+
+```fish
 cosign verify \
     --key cosign.pub \
     ghcr.io/bobby-welch/fedora-niri-noctalia
