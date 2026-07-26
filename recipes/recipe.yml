@@ -106,6 +106,7 @@ modules:
       - notify: false
         scope: system
         install:
+          - com.sigil_ebook.Sigil
           - io.github.lullabyX.sone
           - md.obsidian.Obsidian
           - org.gtk.Gtk3theme.adw-gtk3
