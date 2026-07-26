@@ -86,6 +86,8 @@ modules:
         - xdg-desktop-portal-gnome
         - xdg-desktop-portal-gtk
         - xdg-utils
+        - zathura
+        - zathura-pdf-poppler
         - zip
 
     remove:
