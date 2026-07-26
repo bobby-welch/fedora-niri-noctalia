@@ -228,6 +228,29 @@ nvim --headless '+checkhealth' '+qa'
 For a narrower check, open Neovim and run `:checkhealth` for the affected
 provider or plugin.
 
+## Printing
+
+Check the persistent CUPS queue and the physical printer:
+
+```fish
+printer-status
+lpstat -t
+```
+
+Inspect the underlying services only while troubleshooting:
+
+```fish
+systemctl status \
+    cups.socket \
+    cups.path \
+    avahi-daemon.service \
+    --no-pager
+
+ippfind -T 5 --ls
+```
+
+`cups.service` may be disabled because CUPS is socket-activated.
+
 ## Audio
 
 ```fish

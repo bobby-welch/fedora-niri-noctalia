@@ -157,13 +157,56 @@ ujust system-audit
 
 Resolve any unexpected failure before continuing.
 
-## 8. Restore accounts and application data
+## 8. Configure the printer
+
+The Brother printer uses a permanent driverless IPP Everywhere queue. Confirm
+that the printer is advertised on the local network:
+
+```fish
+ippfind -T 5 --ls
+```
+
+Expected endpoint:
+
+```text
+ipp://BRWF8DA0C603CA2.local:631/ipp/print
+```
+
+Create the persistent queue and make it the system default:
+
+```fish
+sudo lpadmin \
+    -p Brother_HL_L2340D \
+    -E \
+    -v 'ipp://BRWF8DA0C603CA2.local:631/ipp/print' \
+    -m everywhere
+
+sudo lpadmin -d Brother_HL_L2340D
+```
+
+Do not enable `cups.service` directly or install a legacy Brother driver unless
+driverless IPP fails.
+
+Verify the queue, default, and printer connection:
+
+```fish
+lpstat -t
+printer-status
+```
+
+Print the standard CUPS test page:
+
+```fish
+lp /usr/share/cups/data/testprint
+```
+
+## 9. Restore accounts and application data
 
 Sign in to the required applications and restore their local data. Install
 additional applications deliberately, and avoid duplicate user and system
 Flatpak installations.
 
-## 9. Restore synchronized data
+## 10. Restore synchronized data
 
 Verify the rclone remotes:
 
@@ -186,7 +229,7 @@ rclone copy eBooks: ~/eBooks --progress
 Inspect the restored files carefully. These verified local directories will
 become the authoritative source for the hourly one-way sync.
 
-## 10. Dry-run the one-way sync
+## 11. Dry-run the one-way sync
 
 ```fish
 rclone sync \
@@ -219,7 +262,7 @@ anything is unexpected.
 
 For recovery and troubleshooting, see [rclone Setup](rclone.md).
 
-## 11. Enable this laptop as the rclone writer
+## 12. Enable this laptop as the rclone writer
 
 Create the machine-local writer marker:
 
@@ -251,7 +294,7 @@ systemctl --user enable --now \
 rclone-sync-status
 ```
 
-## 12. Clone the image repository
+## 13. Clone the image repository
 
 ```fish
 mkdir -p ~/.local/src
@@ -263,7 +306,7 @@ git clone \
 
 Skip the clone if the repository already exists.
 
-## 13. Final check
+## 14. Final check
 
 ```fish
 ujust system-audit
