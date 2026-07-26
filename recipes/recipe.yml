@@ -31,12 +31,14 @@ modules:
         - adw-gtk3-theme
         - age
         - alacritty
+        - avahi
         - bat
         - bluez
         - brave-browser
         - brave-origin
         - brightnessctl
         - chezmoi
+        - cups
         - distrobox
         - eza
         - fd-find
@@ -99,6 +101,8 @@ modules:
   - type: systemd
     system:
       enabled:
+        - avahi-daemon.service
+        - cups.socket
         - greetd.service
 
   - type: default-flatpaks
