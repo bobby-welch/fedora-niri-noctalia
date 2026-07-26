@@ -1,341 +1,76 @@
-# System Health Checks
+# System Checks
 
-This guide verifies that the Fedora Atomic/BlueBuild, Niri, Noctalia, chezmoi,
-SSH, Flatpak, portal, and rclone setup is working correctly.
+Use this guide when `ujust system-audit` reports a failure or when a specific
+subsystem needs deeper inspection.
 
-Use it after:
-
-- a fresh installation;
-- a BlueBuild update;
-- applying major dotfile changes;
-- moving the setup to another laptop;
-- troubleshooting unexpected desktop behavior.
-
-## Quick health check
-
-Run:
+## Routine audit
 
 ```fish
-sudo bootc status
-
-chezmoi status
-
-git -C ~/.local/share/chezmoi status
-
-systemctl --user --failed --no-pager
-
-rclone-sync-status
+ujust system-audit
 ```
 
-A healthy system should have:
+The audit is read-only and checks the deployment, failed user units, Niri,
+Noctalia, SSH, chezmoi, rclone, and the local BlueBuild repository. Warnings are
+informational; failures require attention.
 
-- the expected BlueBuild image booted;
-- no chezmoi differences;
-- a clean dotfiles repository;
-- no unexpected failed user units;
-- a successful or deliberately disabled rclone status.
+## Deployment
 
-## 1. Verify the BlueBuild deployment
+Inspect the current, staged, and rollback deployments:
 
-Inspect the current deployment:
+```fish
+rpm-ostree status
+```
+
+For management operations and rollback:
 
 ```fish
 sudo bootc status
 ```
 
-The output should identify the expected booted image:
+The expected image is:
 
 ```text
-● Booted image: ghcr.io/bobby-welch/fedora-niri-noctalia:latest
+ghcr.io/bobby-welch/fedora-niri-noctalia:latest
 ```
 
-The digest and version identify the exact image currently running.
+Host package selection belongs in `recipes/recipe.yml`. Avoid routine `dnf
+install`, `dnf upgrade`, or ad hoc package layering.
 
-A previous deployment may appear as:
-
-```text
-Rollback image:
-```
-
-A downloaded update that has not yet been activated appears as a staged
-deployment.
-
-Check for a newer image without downloading its full layers:
-
-```fish
-sudo bootc upgrade --check
-```
-
-Automatic bootc updates are disabled on this image, so updates are applied
-manually.
-
-## 2. Verify core commands
-
-```fish
-for cmd in \
-    niri \
-    noctalia \
-    alacritty \
-    fish \
-    nvim \
-    chezmoi \
-    rclone \
-    age \
-    git \
-    rg \
-    fd \
-    fzf \
-    bat \
-    tmux
-
-    if command -q $cmd
-        printf 'OK      %s -> %s\n' $cmd (command -s $cmd)
-    else
-        printf 'MISSING %s\n' $cmd
-    end
-end
-```
-
-Every command should report `OK`.
-
-A missing command usually means the BlueBuild image recipe or deployment needs
-attention. Avoid installing host packages manually unless the package is
-intentionally meant to be layered.
-
-## 3. Verify chezmoi
-
-```fish
-chezmoi status
-```
-
-A clean result produces no output.
-
-Check the repository:
-
-```fish
-git -C ~/.local/share/chezmoi status
-```
-
-Expected result:
-
-```text
-nothing to commit, working tree clean
-```
-
-Verify the configured paths and age encryption:
-
-```fish
-chezmoi source-path
-
-chezmoi data \
-    | rg '"(sourceDir|configFile|encryption|identity|recipient)"'
-```
-
-Expected paths include:
-
-```text
-/home/bobby/.local/share/chezmoi
-/home/bobby/.config/chezmoi/chezmoi.toml
-/home/bobby/.config/age/key.txt
-```
-
-## 4. Verify the age identity
-
-```fish
-stat -c '%A %a %U:%G %n' \
-    ~/.config/age/key.txt
-```
-
-Expected mode:
-
-```text
-600
-```
-
-Verify the public recipient:
-
-```fish
-age-keygen -y ~/.config/age/key.txt
-```
-
-Expected recipient:
-
-```text
-age1gdv6nj37ekn2v3r7pw907ujvzhujgeghnsqw8umeyk0tm0v38y3sg542zj
-```
-
-Do not continue with encrypted chezmoi operations if this value differs.
-
-## 5. Verify SSH and GitHub authentication
-
-Check the SSH-agent socket:
-
-```fish
-systemctl --user status ssh-agent.socket \
-    --no-pager \
-    --lines=0
-```
-
-It should be enabled and active.
-
-Check the environment:
-
-```fish
-echo $SSH_AUTH_SOCK
-```
-
-Expected form:
-
-```text
-/run/user/1000/ssh-agent.socket
-```
-
-Verify the GitHub SSH configuration:
-
-```fish
-ssh -G github.com 2>/dev/null \
-    | rg '^(hostname|user|identityfile|identitiesonly|'\
-'addkeystoagent|forwardagent) '
-```
-
-Expected essentials:
-
-```text
-user git
-hostname github.com
-identityfile ~/.ssh/id_ed25519
-identitiesonly yes
-addkeystoagent true
-forwardagent no
-```
-
-Test GitHub authentication:
-
-```fish
-ssh -T git@github.com
-```
-
-GitHub should recognize the account and report that shell access is not
-provided. The test intentionally exits with status `1`, so evaluate the
-authentication message rather than the exit status.
-
-## 6. Verify user services
-
-Check for failures:
+## User services
 
 ```fish
 systemctl --user --failed --no-pager
-```
-
-Expected result:
-
-```text
-0 loaded units listed.
-```
-
-List important user units:
-
-```fish
 systemctl --user list-unit-files --no-pager \
     | rg '^(niri|ssh-agent|rclone)'
 ```
 
-The required general-purpose enabled unit is:
+Expected policy:
 
-```text
-ssh-agent.socket
-```
+- `ssh-agent.socket` is enabled;
+- `rclone-hourly-sync.timer` is enabled only on the designated writer;
+- the rclone service and notification service are static units.
 
-`rclone-hourly-sync.timer` should be enabled only on the designated primary
-writer. The rclone service and notification service are static units and do not
-need to be enabled directly.
-
-`playerctld.service` and `swayidle.service` are not required by Noctalia v5.
-They should be enabled only when the configuration deliberately uses those
-optional external services.
-
-## 7. Verify Niri
-
-Check the running compositor:
-
-```fish
-systemctl --user status niri.service \
-    --no-pager \
-    --lines=0
-```
-
-It should report:
-
-```text
-Active: active (running)
-```
-
-Validate the Niri configuration:
+## Niri and Noctalia
 
 ```fish
 niri validate
-```
-
-A valid configuration should produce no error.
-
-Confirm the active session:
-
-```fish
-printf 'XDG_CURRENT_DESKTOP=%s\n' $XDG_CURRENT_DESKTOP
-printf 'WAYLAND_DISPLAY=%s\n' $WAYLAND_DISPLAY
-```
-
-Expected desktop:
-
-```text
-niri
-```
-
-## 8. Verify Noctalia
-
-Noctalia is intentionally launched by Niri with:
-
-```kdl
-spawn-at-startup "noctalia"
-```
-
-A separate Noctalia systemd user service is not expected.
-
-Check the process:
-
-```fish
-pgrep -a noctalia
-```
-
-Validate the merged configuration:
-
-```fish
 noctalia config validate
-```
-
-Check the shell connection:
-
-```fish
+pgrep -a noctalia
 noctalia msg status
-```
-
-Check the active theme mode:
-
-```fish
 noctalia msg theme-mode-get
 ```
 
-Test the launcher:
+Noctalia is launched by Niri. A separate Noctalia systemd service is not
+expected.
+
+Test the launcher and lock screen:
 
 ```fish
 noctalia msg panel-toggle launcher
+noctalia msg session lock
 ```
 
-The launcher should open and close normally.
-
-## 9. Verify theme switching
-
-Record the current portal and GTK state:
+## Theme and portal integration
 
 ```fish
 printf '%s\n' '=== Noctalia mode ==='
@@ -355,57 +90,16 @@ gdbus call \
     color-scheme
 ```
 
-Expected behavior:
-
-- dark mode reports `prefer-dark`;
-- light mode reports `prefer-light`;
-- the portal value changes with the selected mode;
-- GTK 4 applications should follow the portal;
-- some applications may require a restart.
-
-Toggle the mode:
+Inspect portal services and policy:
 
 ```fish
-noctalia msg theme-mode-toggle
-```
-
-Then repeat the checks.
-
-## 10. Verify portals
-
-Check active portal services:
-
-```fish
-systemctl --user --no-pager \
-    --type=service \
+systemctl --user --no-pager --type=service \
     | rg 'xdg-desktop-portal'
-```
 
-Expected active services include:
-
-```text
-xdg-desktop-portal.service
-xdg-desktop-portal-gnome.service
-xdg-desktop-portal-gtk.service
-```
-
-Inspect the configured portal preference:
-
-```fish
 cat ~/.config/xdg-desktop-portal/portals.conf
 ```
 
-Expected configuration:
-
-```ini
-[preferred]
-default=gnome;gtk
-org.freedesktop.impl.portal.FileChooser=gtk
-org.freedesktop.impl.portal.Notification=gtk
-org.freedesktop.impl.portal.Secret=gnome-keyring
-```
-
-Restart portals only when troubleshooting:
+Restart portals only while troubleshooting:
 
 ```fish
 systemctl --user restart \
@@ -414,328 +108,151 @@ systemctl --user restart \
     xdg-desktop-portal-gtk.service
 ```
 
-## 11. Verify audio and media integration
-
-Check PipeWire and WirePlumber:
+## SSH and GitHub
 
 ```fish
-systemctl --user --no-pager \
-    --type=service \
-    | rg 'pipewire|wireplumber'
+systemctl --user status ssh-agent.socket \
+    --no-pager \
+    --lines=0
+
+echo $SSH_AUTH_SOCK
+
+ssh -G github.com 2>/dev/null \
+    | rg '^(hostname|user|identityfile|identitiesonly|'\
+'addkeystoagent|forwardagent) '
+
+ssh -T git@github.com
 ```
 
-Check default audio devices:
+GitHub intentionally returns status `1` after successful authentication because
+it does not provide shell access. Judge the test by its message.
+
+See [SSH and GitHub Setup](ssh-github.md) for recovery.
+
+## Chezmoi and age
+
+Run the dedicated audit:
 
 ```fish
-wpctl status
+chezmoi-audit
 ```
 
-When an MPRIS-capable application is running, list the available players if
-`playerctl` is installed:
+Inspect a failure with:
 
 ```fish
-if command -q playerctl
-    playerctl --list-all
-end
+chezmoi status
+chezmoi diff
+git -C ~/.local/share/chezmoi status
 ```
 
-Noctalia v5 selects and controls MPRIS players directly. `playerctld` is
-optional and is not required for Noctalia's media widget or media IPC.
-
-Verify that Noctalia's media widget or configured media keys control the active
-player.
-
-## 12. Verify idle and lock behavior
-
-Noctalia v5 provides native idle behaviors for locking, monitor power-off, and
-suspend. Its built-in lock and monitor-off behaviors are disabled by default
-until explicitly configured.
-
-Inspect the effective idle configuration:
+Verify the age identity only when encrypted operations fail:
 
 ```fish
-noctalia config export full \
-    | rg -n '^\[idle|^\[idle\.behavior|enabled|timeout|action'
+stat -c '%A %a %U:%G %n' \
+    ~/.config/age/key.txt
+
+age-keygen -y ~/.config/age/key.txt
 ```
 
-Confirm that the desired behaviors are enabled with the intended timeouts.
-
-Test locking manually:
-
-```fish
-noctalia msg session lock
-```
-
-Do not require `swayidle.service` unless the system deliberately retains that
-optional external idle implementation.
-
-## 13. Verify Flatpaks
-
-List installed applications by installation:
-
-```fish
-flatpak list --app \
-    --columns=application,installation,name \
-    | sort
-```
-
-The intended applications should appear once under the `system` installation.
-
-Image-managed applications currently include:
+Expected recipient:
 
 ```text
-io.github.lullabyX.sone
-md.obsidian.Obsidian
-org.libreoffice.LibreOffice
+age1gdv6nj37ekn2v3r7pw907ujvzhujgeghnsqw8umeyk0tm0v38y3sg542zj
 ```
 
-Additional personal applications may also be installed at system scope, but
-their presence is not required for the BlueBuild image itself to be healthy.
+See [Chezmoi Setup and Workflow](chezmoi.md) for recovery.
 
-Check for duplicate app installations:
-
-```fish
-flatpak list --app \
-    --columns=application,installation \
-    | sort
-```
-
-An application appearing under both `user` and `system` is usually an old
-duplicate and should be reviewed.
-
-Do not use `--delete-data` when removing duplicate installations unless
-application data should also be erased.
-
-## 14. Verify Flatpak overrides
-
-Show the SONE override:
-
-```fish
-flatpak override --user --show \
-    io.github.lullabyX.sone
-```
-
-Expected result:
-
-```ini
-[Environment]
-WEBKIT_DISABLE_COMPOSITING_MODE=
-
-[Context]
-unset-environment=WEBKIT_DISABLE_COMPOSITING_MODE;
-```
-
-Show the Obsidian override:
-
-```fish
-flatpak override --user --show \
-    md.obsidian.Obsidian
-```
-
-Expected result:
-
-```ini
-[Context]
-sockets=!x11;wayland;
-```
-
-List all user overrides:
-
-```fish
-flatpak override --user --show
-```
-
-Review unexpected global overrides carefully.
-
-## 15. Verify Neovim
-
-Check the version:
-
-```fish
-nvim --version | head
-```
-
-Start Neovim without opening a file:
-
-```fish
-nvim
-```
-
-Verify:
-
-- no startup errors;
-- colors and light/dark mode are correct;
-- plugins load;
-- LSP starts where expected;
-- Markdown tooling works.
-
-Run the built-in health check:
-
-```vim
-:checkhealth
-```
-
-Review errors rather than trying to eliminate every informational warning.
-
-## 16. Verify Fish and shell tools
-
-Start a clean Fish session:
-
-```fish
-exec fish
-```
-
-Verify Starship:
-
-```fish
-type -a starship
-```
-
-Check important environment values:
-
-```fish
-printf 'SHELL=%s\n' $SHELL
-printf 'SSH_AUTH_SOCK=%s\n' $SSH_AUTH_SOCK
-printf 'XDG_CURRENT_DESKTOP=%s\n' $XDG_CURRENT_DESKTOP
-```
-
-Verify fzf integration:
-
-```fish
-type -a fzf
-set --show FZF_DEFAULT_OPTS_FILE
-```
-
-An unset `FZF_DEFAULT_OPTS_FILE` is acceptable if configuration is managed
-another way. It should not reference a removed or obsolete file.
-
-## 17. Verify rclone
-
-Run:
+## rclone
 
 ```fish
 rclone-sync-status
-```
 
-On the designated sync laptop, expected output includes:
-
-```text
-Rclone role: PRIMARY WRITER
-Last result: SUCCESS
-```
-
-Check the timer:
-
-```fish
 systemctl --user list-timers \
     rclone-hourly-sync.timer \
     --all \
     --no-pager
-```
 
-Check remotes:
-
-```fish
-rclone listremotes
-```
-
-Expected:
-
-```text
-pcloud:
-eBooks:
-```
-
-Test pCloud:
-
-```fish
-rclone about pcloud:
-```
-
-Test the encrypted eBooks remote:
-
-```fish
-rclone lsf eBooks: \
-    --max-depth 1 \
-    | head -n 20
-```
-
-See [rclone Setup](rclone.md) for dry runs, activation, deletion protection, and
-laptop handoff.
-
-## 18. Verify sensitive-file permissions
-
-```fish
-stat -c '%A %a %U:%G %n' \
-    ~/.config/age/key.txt \
-    ~/.config/rclone/rclone.conf \
-    ~/.ssh/config \
-    ~/.ssh/id_ed25519
-```
-
-Expected mode:
-
-```text
-600
-```
-
-Check the SSH directory:
-
-```fish
-stat -c '%A %a %U:%G %n' ~/.ssh
-```
-
-Expected mode:
-
-```text
-700
-```
-
-## 19. Review recent errors
-
-User journal warnings and errors from the current boot:
-
-```fish
 journalctl --user \
-    --boot \
-    --priority=warning \
+    -u rclone-hourly-sync.service \
+    -n 100 \
     --no-pager
 ```
 
-System warnings and errors:
+A completed oneshot service is normally `inactive (dead)` with a successful
+result. See [rclone Setup](rclone.md) before changing writer state or retrying a
+failed synchronization.
+
+## Flatpaks
 
 ```fish
-journalctl \
-    --boot \
-    --priority=warning \
-    --no-pager
+flatpak list --system --app
+flatpak list --user --app
+flatpak override --show
 ```
 
-Some warnings may be harmless. Focus on repeated failures, missing files,
-crashes, and services that affect the current setup.
+Avoid installing the same application in both scopes. Image-managed graphical
+applications should remain system Flatpaks.
 
-## 20. Final checklist
+Inspect one application:
 
-A fully healthy system should satisfy all of the following:
+```fish
+flatpak info <application-id>
+flatpak override --show <application-id>
+```
 
-- The expected BlueBuild image is booted.
-- Core commands are present.
-- Chezmoi reports no differences.
-- The dotfiles Git repository is clean.
-- The age recipient matches.
-- SSH-agent socket is active.
-- GitHub SSH authentication succeeds.
-- No unexpected user units are failed.
-- Niri is active.
-- Niri configuration validates.
-- Noctalia is running through Niri autostart.
-- Theme switching updates GTK and the appearance portal.
-- GNOME and GTK portals are active.
-- PipeWire and WirePlumber are running.
-- Noctalia idle and lock behavior is configured as intended.
-- Flatpaks are installed once at the system level.
-- Intended Flatpak overrides remain active.
-- Neovim starts without errors.
-- Fish starts without warnings.
-- rclone is successful or intentionally disabled.
-- Sensitive files have correct permissions.
+## Distrobox and workstation tools
+
+```fish
+distrobox list
+command -v markdownlint-cli2
+command -v harper-ls
+command -v cloudflare-speed-cli
+```
+
+Restore or update them with:
+
+```fish
+ujust setup-node-tools
+ujust update-markdownlint
+ujust update-harper
+ujust update-cloudflare-speed-cli
+```
+
+## Neovim
+
+```fish
+nvim --version | head -n 3
+nvim --headless '+checkhealth' '+qa'
+```
+
+For a narrower check, open Neovim and run `:checkhealth` for the affected
+provider or plugin.
+
+## Audio
+
+```fish
+systemctl --user --no-pager --type=service \
+    | rg 'pipewire|wireplumber'
+
+wpctl status
+```
+
+Noctalia controls MPRIS players directly; no separate media-routing daemon is
+required.
+
+## Recent errors
+
+```fish
+journalctl --user -p warning..alert -b --no-pager
+sudo journalctl -p warning..alert -b --no-pager
+```
+
+Review messages in context. Warnings are not automatically defects.
+
+## Final verification
+
+```fish
+ujust system-audit
+```
+
+The summary should report no failures.

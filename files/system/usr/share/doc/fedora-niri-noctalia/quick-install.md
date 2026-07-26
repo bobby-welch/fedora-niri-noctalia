@@ -1,27 +1,26 @@
 # Quick Installation
 
 Use this guide for a normal rebuild from the Fedora Niri Noctalia installer ISO.
+Detailed recovery and troubleshooting are covered in the subsystem guides.
 
-Stop and use the [detailed installation and recovery guide](install.md) whenever
-a result differs from the expected outcome. Do not enable rclone until the local
-data has been restored and reviewed.
+> **Important**
+>
+> Do not enable rclone until the local data has been restored, inspected, and
+> verified with dry runs. Only one laptop may be the active rclone writer.
 
 ## 1. Install and boot
 
 Boot the installer USB, complete the Fedora installer, remove the USB drive, and
 boot the installed system.
 
-Verify the image:
+Verify the workstation:
 
 ```fish
-sudo bootc status
+ujust system-audit
 ```
 
-Expected image:
-
-```text
-ghcr.io/bobby-welch/fedora-niri-noctalia:latest
-```
+During initial setup, `SKIP` results are expected for components that have not
+been configured yet.
 
 ## 2. Set the hostname and connect
 
@@ -31,7 +30,7 @@ nmcli general status
 nmcli device status
 ```
 
-Set the hostname if needed:
+Set the hostname if needed, then reboot:
 
 ```fish
 sudo hostnamectl hostname frost
@@ -40,15 +39,18 @@ systemctl reboot
 
 ## 3. Sign in to 1Password
 
-Sign in and locate:
+Sign in and locate the document named:
 
 ```text
 Chezmoi age identity key
 ```
 
-You will need it before applying the dotfiles.
+The age identity is required before chezmoi can decrypt the managed rclone
+configuration.
 
 ## 4. Create the GitHub SSH key
+
+Enable the SSH-agent socket and create a device-specific key:
 
 ```fish
 systemctl --user enable --now ssh-agent.socket
@@ -62,18 +64,17 @@ ssh-keygen \
     -f ~/.ssh/id_ed25519
 ```
 
-Use a strong passphrase and save it in 1Password.
-
-Add `~/.ssh/id_ed25519.pub` to GitHub as an authentication key, then test:
+Use a strong passphrase and save it in 1Password. Add
+`~/.ssh/id_ed25519.pub` to GitHub as an authentication key, then test:
 
 ```fish
 ssh -T git@github.com
 ```
 
-A successful test recognizes the GitHub account and says shell access is not
-provided. Exit status `1` is normal for this test.
+A successful test recognizes the GitHub account and says that shell access is
+not provided. Exit status `1` is normal for this test.
 
-For problems, see [SSH and GitHub Setup](ssh-github.md).
+For details, see [SSH and GitHub Setup](ssh-github.md).
 
 ## 5. Restore the age identity
 
@@ -83,12 +84,11 @@ Restore the 1Password document to:
 ~/.config/age/key.txt
 ```
 
-Then verify it:
+Then secure and verify it:
 
 ```fish
 mkdir -p ~/.config/age
 chmod 600 ~/.config/age/key.txt
-
 age-keygen -y ~/.config/age/key.txt
 ```
 
@@ -106,70 +106,50 @@ Stop if it differs.
 chezmoi init --apply \
     git@github.com:bobby-welch/dotfiles.git
 
-chezmoi status
-
-git -C ~/.local/share/chezmoi status
-```
-
-`chezmoi status` should print nothing, and the Git working tree should be clean.
-
-Reload the systemd user manager and enable the SSH-agent socket:
-
-```fish
 systemctl --user daemon-reload
 systemctl --user enable --now ssh-agent.socket
-```
-
-Start a fresh Fish process so the managed shell configuration is loaded:
-
-```fish
 exec fish
 ```
 
-Noctalia v5 handles MPRIS media selection and can handle locking, monitor
-power-off, and suspend through its native services. Do not enable
-`playerctld.service` or `swayidle.service` unless you have deliberately chosen
-to keep those optional external services.
-
-Do not enable rclone yet.
-
-For problems, see [Chezmoi Setup and Workflow](chezmoi.md).
-
-## 7. Verify the desktop
+Verify the result:
 
 ```fish
-niri validate
-noctalia config validate
-pgrep -a noctalia
-noctalia msg status
-noctalia msg theme-mode-get
-systemctl --user --failed --no-pager
+chezmoi-audit
 ```
 
-Resolve any unexpected failure before continuing.
+The audit should report no item requiring attention.
 
-Configure Noctalia's native idle behaviors for locking and monitor power-off.
-The built-in idle behaviors are disabled by default until explicitly enabled.
-Test the lock screen with:
+For details, see [Chezmoi Setup and Workflow](chezmoi.md).
+
+## 7. Complete workstation setup
+
+Create the Node tools Distrobox and install the current Harper release:
+
+```fish
+ujust setup-node-tools
+ujust update-harper
+```
+
+Configure Noctalia's native idle behaviors for locking and monitor power-off,
+then test the lock screen:
 
 ```fish
 noctalia msg session lock
 ```
 
-## 8. Restore accounts and personal applications
+Run an interim check:
 
-Sign in to the required applications and restore their local data.
-
-The image-managed Flatpaks are:
-
-```text
-io.github.lullabyX.sone
-md.obsidian.Obsidian
-org.libreoffice.LibreOffice
+```fish
+ujust system-audit
 ```
 
-Install other personal applications deliberately and avoid duplicate user and
-system Flatpak installations.
+Resolve any unexpected failure before continuing.
+
+## 8. Restore accounts and application data
+
+Sign in to the required applications and restore their local data. Install
+additional applications deliberately, and avoid duplicate user and system
+Flatpak installations.
 
 ## 9. Restore synchronized data
 
@@ -222,14 +202,14 @@ rclone sync \
     --log-level=ERROR
 ```
 
-Review every proposed upload, replacement, and deletion. Do not proceed if
+Review every proposed upload, replacement, and deletion. Do not continue if
 anything is unexpected.
 
-For recovery or troubleshooting, see [rclone Setup](rclone.md).
+For recovery and troubleshooting, see [rclone Setup](rclone.md).
 
 ## 11. Enable this laptop as the rclone writer
 
-Only one laptop may be active as the writer.
+Create the machine-local writer marker:
 
 ```fish
 mkdir -p ~/.config/rclone-sync
@@ -239,7 +219,11 @@ printf '%s\n' \
     > ~/.config/rclone-sync/enabled
 
 chmod 600 ~/.config/rclone-sync/enabled
+```
 
+Run one manual sync and verify success:
+
+```fish
 systemctl --user start \
     rclone-hourly-sync.service
 
@@ -265,20 +249,13 @@ git clone \
     ~/.local/src/fedora-niri-noctalia
 ```
 
-Skip this command if the repository already exists.
+Skip the clone if the repository already exists.
 
 ## 13. Final check
 
 ```fish
-sudo bootc status
-
-chezmoi status
-
-git -C ~/.local/share/chezmoi status
-
-systemctl --user --failed --no-pager
-
-rclone-sync-status
+ujust system-audit
 ```
 
-For a comprehensive audit, follow [System Health Checks](system-checks.md).
+The final summary should report no failures. See [System Health
+Checks](system-checks.md) for targeted diagnostics when an audit item fails.

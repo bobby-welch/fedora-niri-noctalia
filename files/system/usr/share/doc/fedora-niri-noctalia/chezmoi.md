@@ -1,294 +1,88 @@
 # Chezmoi Setup and Workflow
 
-This guide covers restoring, applying, updating, and maintaining the dotfiles
-repository.
-
-Repository:
+Chezmoi manages the user configuration stored in:
 
 ```text
 git@github.com:bobby-welch/dotfiles.git
 ```
 
-Chezmoi source directory:
+Source directory:
 
 ```text
 ~/.local/share/chezmoi
 ```
 
-Local chezmoi configuration:
+## Restore a new laptop
 
-```text
-~/.config/chezmoi/chezmoi.toml
-```
+Complete these steps in order:
 
-## Bootstrap order
+1. Configure GitHub SSH access.
+2. Restore the age identity.
+3. Initialize and apply chezmoi.
+4. Reload the user manager and shell.
+5. Run `chezmoi-audit`.
 
-On a new or rebuilt machine, complete these steps in order:
+### Restore the age identity
 
-1. Configure SSH and GitHub access.
-2. Restore the age identity from 1Password.
-3. Initialize and apply the dotfiles repository.
-4. Verify that chezmoi reports no differences.
-5. Reload and verify user services.
-6. Enable machine-specific services only when appropriate.
-
-See [SSH and GitHub Setup](ssh-github.md) before continuing on a fresh machine.
-
-## 1. Restore the age identity
-
-The repository contains an age-encrypted rclone configuration. Chezmoi cannot
-apply it until the matching private age identity is available.
-
-Restore the 1Password document named:
-
-```text
-Chezmoi age identity key
-```
-
-to:
+Restore the 1Password document named `Chezmoi age identity key` to:
 
 ```text
 ~/.config/age/key.txt
 ```
 
-Create the directory if needed:
+Secure and verify it:
 
 ```fish
 mkdir -p ~/.config/age
-```
-
-Secure the identity:
-
-```fish
 chmod 600 ~/.config/age/key.txt
-```
-
-Verify its public recipient:
-
-```fish
 age-keygen -y ~/.config/age/key.txt
 ```
 
-Expected value:
+Expected recipient:
 
 ```text
 age1gdv6nj37ekn2v3r7pw907ujvzhujgeghnsqw8umeyk0tm0v38y3sg542zj
 ```
 
-Do not continue if the value differs.
+Stop if it differs. Never commit the private age identity.
 
-The private age identity must never be committed to Git.
-
-## 2. Initialize and apply chezmoi
-
-After GitHub SSH authentication and the age identity are ready:
+### Initialize and apply
 
 ```fish
-chezmoi init --apply git@github.com:bobby-welch/dotfiles.git
+chezmoi init --apply \
+    git@github.com:bobby-welch/dotfiles.git
+
+systemctl --user daemon-reload
+systemctl --user enable --now ssh-agent.socket
+exec fish
 ```
 
-This command:
-
-- clones the dotfiles repository;
-- renders the local chezmoi configuration;
-- decrypts encrypted source files;
-- installs managed files;
-- runs applicable chezmoi scripts.
-
-The repository contains:
-
-```text
-.chezmoi.toml.tmpl
-```
-
-It renders the local configuration using:
-
-```text
-~/.config/age/key.txt
-```
-
-The generated configuration should contain:
-
-```toml
-encryption = "age"
-
-[age]
-identity = "/home/bobby/.config/age/key.txt"
-recipient = "age1gdv6nj37ekn2v3r7pw907ujvzhujgeghnsqw8umeyk0tm0v38y3sg542zj"
-```
-
-## 3. Verify the initial apply
-
-Check for unmanaged differences:
+Verify:
 
 ```fish
-chezmoi status
+chezmoi-audit
 ```
 
-A clean system produces no output.
+A clean audit exits with status `0`.
 
-Check the repository:
+## Normal edit workflow
+
+### Edit the live file
 
 ```fish
-git -C ~/.local/share/chezmoi status
-```
-
-Expected result:
-
-```text
-nothing to commit, working tree clean
-```
-
-Verify the configured paths:
-
-```fish
-chezmoi source-path
-chezmoi data | rg '"(sourceDir|configFile|encryption|identity|recipient)"'
-```
-
-## Encrypted files
-
-The encrypted source currently managed by chezmoi is:
-
-```text
-private_dot_config/rclone/encrypted_private_rclone.conf.age
-```
-
-It is applied as:
-
-```text
-~/.config/rclone/rclone.conf
-```
-
-Chezmoi decrypts the file during operations such as:
-
-```fish
-chezmoi apply
-chezmoi diff
-chezmoi status
-```
-
-To verify that the encrypted source matches the live file:
-
-```fish
-sha256sum ~/.config/rclone/rclone.conf
-
-chezmoi cat ~/.config/rclone/rclone.conf \
-    | sha256sum
-```
-
-The hashes should match.
-
-Never use ordinary `git add` on a plaintext secret.
-
-To add or update a sensitive file through chezmoi, use encryption explicitly:
-
-```fish
-chezmoi add --encrypt ~/.config/rclone/rclone.conf
-```
-
-## dconf handling
-
-The repository tracks a small set of declarative dconf settings in:
-
-```text
-dconf.ini
-```
-
-This is a source-only file. The following entry in `.chezmoiignore` prevents
-chezmoi from creating `~/dconf.ini`:
-
-```text
-/dconf.ini
-```
-
-The settings are loaded by:
-
-```text
-.chezmoiscripts/run_onchange_after_load-dconf.sh.tmpl
-```
-
-The rendered script includes a hash of `dconf.ini`. When the file changes,
-chezmoi detects the new hash and runs the loader during the next apply.
-
-The current setting hides title-bar buttons under Niri:
-
-```ini
-[org/gnome/desktop/wm/preferences]
-button-layout=':'
-```
-
-### Update the settings
-
-Edit the source-only file directly:
-
-```fish
-nvim ~/.local/share/chezmoi/dconf.ini
-```
-
-Review the change:
-
-```fish
-git -C ~/.local/share/chezmoi diff -- dconf.ini
-```
-
-Preview the pending loader script:
-
-```fish
-chezmoi apply --dry-run --verbose --include=scripts
-```
-
-Apply the settings:
-
-```fish
-chezmoi apply --include=scripts
-```
-
-Verify the live value:
-
-```fish
-gsettings get org.gnome.desktop.wm.preferences button-layout
-```
-
-Expected result:
-
-```text
-':'
-```
-
-## System documentation
-
-The quick-install and detailed recovery guides are maintained in the BlueBuild
-repository and installed with the image at:
-
-```text
-/usr/share/doc/fedora-niri-noctalia/
-```
-
-They are available immediately after boot, before SSH, GitHub, age, or chezmoi
-has been configured.
-
-The chezmoi repository contains only managed user configuration and related
-source files.
-
-## Normal update workflow
-
-### Update a managed file
-
-Edit the live file normally, then add the change back to chezmoi:
-
-```fish
+nvim ~/.config/example/config
 chezmoi add ~/.config/example/config
 ```
 
-Review:
+Review both destination and source state:
 
 ```fish
 chezmoi diff
 git -C ~/.local/share/chezmoi diff
+git -C ~/.local/share/chezmoi status
 ```
 
-Stage, commit, and push:
+Commit and push the generated source path:
 
 ```fish
 git -C ~/.local/share/chezmoi add <source-path>
@@ -299,267 +93,166 @@ git -C ~/.local/share/chezmoi commit \
 git -C ~/.local/share/chezmoi push
 ```
 
-### Edit the source directly
+Finish with:
 
-Open the managed source file:
+```fish
+chezmoi-audit
+```
+
+### Edit the source directly
 
 ```fish
 chezmoi edit ~/.config/example/config
-```
-
-Apply it:
-
-```fish
 chezmoi apply ~/.config/example/config
+chezmoi-audit
 ```
 
-Verify:
+### Pull remote changes
 
-```fish
-chezmoi status
-```
-
-### Pull and apply remote changes
-
-Use the review-first workflow by default:
+Use the review-first workflow:
 
 ```fish
 git -C ~/.local/share/chezmoi pull --ff-only
 chezmoi diff
 chezmoi apply
+chezmoi-audit
 ```
 
-This keeps retrieval and application separate so remote changes can be reviewed
-before they affect the home directory.
+Use `chezmoi update` only when the remote changes are already trusted and should
+be pulled and applied in one operation.
 
-For a trusted change set that should be pulled and applied in one step:
+## Common operations
 
-```fish
-chezmoi update
-```
-
-## Inspect managed state
-
-Show pending differences:
+Inspect state:
 
 ```fish
 chezmoi status
-```
-
-Preview changes:
-
-```fish
 chezmoi diff
-```
-
-Show the rendered version of a managed file:
-
-```fish
-chezmoi cat ~/.config/example/config
-```
-
-Show the source path corresponding to a destination:
-
-```fish
-chezmoi source-path ~/.config/example/config
-```
-
-Show the destination corresponding to a source file:
-
-```fish
-chezmoi target-path \
-    ~/.local/share/chezmoi/private_dot_config/example/config
-```
-
-List managed destination files:
-
-```fish
 chezmoi managed
 ```
 
-## Add a new file
+Show the rendered destination or source mapping:
 
-For a normal configuration file:
+```fish
+chezmoi cat ~/.config/example/config
+chezmoi source-path ~/.config/example/config
+```
+
+Add a normal file:
 
 ```fish
 chezmoi add ~/.config/example/config
 ```
 
-For an executable script:
+Add an executable:
 
 ```fish
 chmod +x ~/.local/bin/example
 chezmoi add ~/.local/bin/example
 ```
 
-For a sensitive file:
+Add or update a secret:
 
 ```fish
 chezmoi add --encrypt ~/.config/example/secret.conf
 ```
 
-Always inspect the generated source path before committing.
+Never stage a plaintext secret directly with Git.
 
-## Remove a managed file
-
-Remove it from chezmoi while leaving the live destination in place:
+Stop managing a file while leaving the destination in place:
 
 ```fish
 chezmoi forget ~/.config/example/config
 ```
 
-To remove both the source entry and destination, inspect the change carefully
-and remove them deliberately rather than assuming `forget` deletes the live
-file.
+## Encrypted rclone configuration
 
-## Templates
-
-Files ending in:
+The encrypted source is applied as:
 
 ```text
-.tmpl
+~/.config/rclone/rclone.conf
 ```
 
-are rendered through chezmoi templates.
+Verify that the rendered source matches the live file:
 
-Test a template directly:
+```fish
+sha256sum ~/.config/rclone/rclone.conf
+
+chezmoi cat ~/.config/rclone/rclone.conf \
+    | sha256sum
+```
+
+The hashes should match.
+
+## dconf settings
+
+The source-only file `dconf.ini` is loaded by a `run_onchange` chezmoi script.
+Edit it in the source repository:
+
+```fish
+nvim ~/.local/share/chezmoi/dconf.ini
+git -C ~/.local/share/chezmoi diff -- dconf.ini
+```
+
+Preview and apply scripts:
+
+```fish
+chezmoi apply --dry-run --verbose --include=scripts
+chezmoi apply --include=scripts
+```
+
+## Machine-specific state
+
+Chezmoi intentionally does not manage:
+
+```text
+~/.ssh/id_ed25519
+~/.ssh/id_ed25519.pub
+~/.ssh/known_hosts
+~/.config/age/key.txt
+~/.config/rclone-sync/enabled
+~/.local/state/rclone-sync/status
+```
+
+Do not add machine identity, runtime state, or the rclone writer marker to the
+repository.
+
+## Scripts and templates
+
+Template sources end in `.tmpl`. Test one with:
 
 ```fish
 chezmoi execute-template \
     < ~/.local/share/chezmoi/example.tmpl
 ```
 
-Inspect template data:
-
-```fish
-chezmoi data
-```
-
-Do not place secrets directly into a template committed to Git.
-
-## Scripts
-
-Chezmoi scripts live under:
-
-```text
-.chezmoiscripts/
-```
-
-Common prefixes include:
-
-```text
-run_once_
-run_onchange_
-run_before_
-run_after_
-```
-
-The current dconf loader is:
-
-```text
-run_onchange_after_load-dconf.sh.tmpl
-```
-
-Before adding a new script, decide whether it should:
-
-- run once per machine;
-- rerun when its content changes;
-- run before files are applied;
-- run after files are applied.
-
-Avoid scripts that silently enable machine-specific services. For example, the
-rclone primary-writer marker and timer must remain deliberate manual actions.
-
-## Machine-specific state
-
-The following items are intentionally not managed by chezmoi:
-
-```text
-~/.config/age/key.txt
-~/.ssh/id_ed25519
-~/.ssh/id_ed25519.pub
-~/.ssh/known_hosts
-~/.config/rclone-sync/enabled
-~/.local/state/rclone-sync/status
-```
-
-Reasons include:
-
-- private recovery material;
-- per-device credentials;
-- generated host state;
-- runtime state;
-- safeguards that should not activate automatically.
-
-## Permissions
-
-Verify sensitive files:
-
-```fish
-stat -c '%A %a %U:%G %n' \
-    ~/.config/age/key.txt \
-    ~/.config/rclone/rclone.conf \
-    ~/.ssh/config \
-    ~/.ssh/id_ed25519
-```
-
-Expected mode for each is:
-
-```text
-600
-```
-
-The SSH directory itself should be:
-
-```text
-700
-```
-
-## Post-apply service reload
-
-After applying changes that add or modify systemd user units:
-
-```fish
-systemctl --user daemon-reload
-```
-
-Inspect failures:
-
-```fish
-systemctl --user --failed
-```
-
-Do not automatically enable every managed unit. Some services or timers are
-machine-specific and should be enabled only after validation.
-
-## Final verification
-
-Run:
-
-```fish
-chezmoi status
-
-git -C ~/.local/share/chezmoi status
-
-systemctl --user --failed
-```
-
-A healthy result has:
-
-- no chezmoi status output;
-- a clean Git working tree;
-- no unexpected failed user services.
+Chezmoi scripts live under `.chezmoiscripts/`. Prefer declarative files over
+scripts, and use `run_once` or `run_onchange` only when the lifecycle requires
+it. Scripts must not silently enable machine-specific services.
 
 ## Recovery
 
-If the local source directory is damaged but the home-directory files remain
-intact:
+Preview before repairing:
 
-1. move the source directory aside;
-2. ensure GitHub SSH and the age identity work;
-3. run `chezmoi init git@github.com:bobby-welch/dotfiles.git`;
-4. inspect with `chezmoi diff`;
-5. apply only after reviewing the proposed changes.
+```fish
+chezmoi status
+chezmoi diff
+```
 
-Do not delete the existing source directory until the replacement has been
-verified.
+Restore the managed state:
+
+```fish
+chezmoi apply
+systemctl --user daemon-reload
+exec fish
+chezmoi-audit
+```
+
+For source repository problems:
+
+```fish
+git -C ~/.local/share/chezmoi status
+git -C ~/.local/share/chezmoi diff
+```
+
+Do not reset or discard changes until they have been reviewed.
