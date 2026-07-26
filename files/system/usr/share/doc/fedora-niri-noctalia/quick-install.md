@@ -123,12 +123,24 @@ For details, see [Chezmoi Setup and Workflow](chezmoi.md).
 
 ## 7. Complete workstation setup
 
-Create the Node tools Distrobox and install the current Harper release:
+Restore the workstation tools that are intentionally installed outside the
+immutable image:
 
 ```fish
 ujust setup-node-tools
 ujust update-harper
+ujust update-cloudflare-speed-cli
 ```
+
+Verify them:
+
+```fish
+command -v markdownlint-cli2
+command -v harper-ls
+command -v cloudflare-speed-cli
+```
+
+Each command should print a path.
 
 Configure Noctalia's native idle behaviors for locking and monitor power-off,
 then test the lock screen:
@@ -257,5 +269,5 @@ Skip the clone if the repository already exists.
 ujust system-audit
 ```
 
-The final summary should report no failures. See [System Health
+The final summary should report no failures. See [System
 Checks](system-checks.md) for targeted diagnostics when an audit item fails.

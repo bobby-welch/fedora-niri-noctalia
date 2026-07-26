@@ -47,9 +47,12 @@ chezmoi add ~/.config/example/config
 chezmoi diff
 ```
 
-Review the source repository, then commit and push:
+Review the source repository, identify the generated source path, then commit
+and push:
 
 ```fish
+chezmoi source-path ~/.config/example/config
+
 git -C ~/.local/share/chezmoi diff
 git -C ~/.local/share/chezmoi status
 
@@ -120,8 +123,9 @@ ujust update-harper
 ujust update-cloudflare-speed-cli
 ```
 
-Use `ujust setup-node-tools` only to create or restore the managed Node tools
-Distrobox.
+Use `ujust setup-node-tools` to create or restore the declarative Node tools
+Distrobox. It installs the configured Markdownlint version during setup;
+`ujust update-markdownlint` is for deliberate later updates.
 
 ## rclone
 
