@@ -189,43 +189,71 @@ chezmoi add --encrypt ~/.config/rclone/rclone.conf
 
 ## dconf handling
 
-The repository contains:
+The repository tracks a small set of declarative dconf settings in:
 
 ```text
 dconf.ini
 ```
 
-It is not applied as a normal file because `.chezmoiignore` contains:
+This is a source-only file. The following entry in `.chezmoiignore` prevents
+chezmoi from creating `~/dconf.ini`:
 
 ```text
 /dconf.ini
 ```
 
-Instead, this script loads it into dconf:
+The settings are loaded by:
 
 ```text
 .chezmoiscripts/run_onchange_after_load-dconf.sh.tmpl
 ```
 
-The script includes a hash of `dconf.ini`. Chezmoi reruns it only when the dconf
-export changes.
+The rendered script includes a hash of `dconf.ini`. When the file changes,
+chezmoi detects the new hash and runs the loader during the next apply.
 
-To update the managed dconf data:
+The current setting hides title-bar buttons under Niri:
 
-```fish
-dconf dump / > ~/.local/share/chezmoi/dconf.ini
+```ini
+[org/gnome/desktop/wm/preferences]
+button-layout=':'
 ```
 
-Review the result before committing:
+### Update the settings
+
+Edit the source-only file directly:
+
+```fish
+nvim ~/.local/share/chezmoi/dconf.ini
+```
+
+Review the change:
 
 ```fish
 git -C ~/.local/share/chezmoi diff -- dconf.ini
 ```
 
-Then apply it locally if needed:
+Preview the pending loader script:
 
 ```fish
-chezmoi apply
+chezmoi apply --dry-run --verbose --include=scripts
+```
+
+Apply the settings:
+
+```fish
+chezmoi apply --include=scripts
+```
+
+Verify the live value:
+
+```fish
+gsettings get org.gnome.desktop.wm.preferences button-layout
+```
+
+Expected result:
+
+```text
+':'
 ```
 
 ## System documentation
