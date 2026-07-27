@@ -34,7 +34,6 @@ modules:
         - avahi
         - bat
         - bluez
-        - brave-browser
         - brave-origin
         - brightnessctl
         - chezmoi
