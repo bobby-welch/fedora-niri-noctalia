@@ -128,19 +128,47 @@ immutable image:
 
 ```fish
 ujust setup-node-tools
+ujust setup-ebook-tools
 ujust update-harper
 ujust update-cloudflare-speed-cli
 ```
 
-Verify them:
+Install the pinned Hardcover plugin inside `ebook-tools`:
+
+```fish
+distrobox enter \
+    --no-tty \
+    --name ebook-tools \
+    -- \
+    calibre-customize --add-plugin \
+        ~/.local/share/ebook-tools/plugins/Hardcover-0.5.0.zip
+```
+
+Verify the restored tools:
 
 ```fish
 command -v markdownlint-cli2
 command -v harper-ls
 command -v cloudflare-speed-cli
+
+distrobox enter \
+    --no-tty \
+    --name ebook-tools \
+    -- \
+    calibre-customize --list-plugins \
+    | rg -A3 Hardcover
+
+distrobox enter \
+    --no-tty \
+    --name ebook-tools \
+    -- \
+    python3 -m py_compile \
+        ~/.local/bin/ebook-clean \
+        ~/.local/bin/ebook-fix-metadata
 ```
 
-Each command should print a path.
+The three host commands should print paths. The Hardcover plugin should be
+listed as version `0.5.0`, and successful script compilation produces no output.
 
 Configure Noctalia's native idle behaviors for locking and monitor power-off,
 then test the lock screen:

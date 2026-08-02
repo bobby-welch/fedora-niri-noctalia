@@ -127,6 +127,16 @@ Use `ujust setup-node-tools` to create or restore the declarative Node tools
 Distrobox. It installs the configured Markdownlint version during setup;
 `ujust update-markdownlint` is for deliberate later updates.
 
+Use `ujust setup-ebook-tools` to create or restore the declarative ebook tools
+Distrobox. After restoring chezmoi, reinstall the pinned Hardcover plugin from:
+
+```text
+~/.local/share/ebook-tools/plugins/Hardcover-0.5.0.zip
+```
+
+The detailed restoration and verification steps are documented in the quick
+installation guide.
+
 ## rclone
 
 Check status:
