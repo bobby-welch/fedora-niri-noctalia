@@ -19,12 +19,6 @@ modules:
     validate: true
 
   - type: dnf
-    repos:
-      files:
-        - https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
-      copr:
-        - atim/starship
-
     install:
       packages:
         - 7zip
@@ -34,7 +28,6 @@ modules:
         - avahi
         - bat
         - bluez
-        - brave-origin
         - brightnessctl
         - chezmoi
         - cups
@@ -73,7 +66,6 @@ modules:
         - rclone
         - ripgrep
         - rsms-inter-fonts
-        - starship
         - swayimg
         - tmux
         - tuned-ppd
@@ -94,6 +86,36 @@ modules:
         # base-main normally omits Firefox; remove it defensively in case that changes upstream.
         - firefox
         - firefox-langpacks
+
+  # Install Brave from its official RPM repository, then remove the build-time repository.
+  - type: dnf
+    repos:
+      cleanup: true
+      files:
+        - https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
+    install:
+      packages:
+        - brave-origin
+
+  # Install Starship from its Fedora COPR, then remove the build-time repository.
+  - type: dnf
+    repos:
+      cleanup: true
+      copr:
+        - atim/starship
+    install:
+      packages:
+        - starship
+
+  # Install Ghostty from its recommended Fedora COPR, then remove the build-time repository.
+  - type: dnf
+    repos:
+      cleanup: true
+      copr:
+        - scottames/ghostty
+    install:
+      packages:
+        - ghostty
 
   - type: fonts
     fonts:
