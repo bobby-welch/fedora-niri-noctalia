@@ -38,6 +38,7 @@ modules:
         - fwupd
         - fzf
         - git
+        - gnome-calculator
         - gnome-keyring
         - gnome-keyring-pam
         - google-noto-color-emoji-fonts
