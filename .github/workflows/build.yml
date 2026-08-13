@@ -29,17 +29,6 @@ jobs:
           # !! Add your recipes here
           - recipe.yml
     steps:
-      - name: Check signing secret
-        shell: bash
-        env:
-          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
-        run: |
-          if [[ -z "$SIGNING_SECRET" ]]; then
-            echo "::error::SIGNING_SECRET is empty or unavailable"
-            exit 1
-          fi
-          echo "SIGNING_SECRET is present"
-
       # the build is fully handled by the reusable github action
       - name: Build Custom Image
         uses: blue-build/github-action@v1.12
@@ -48,7 +37,6 @@ jobs:
           cosign_private_key: ${{ secrets.SIGNING_SECRET }}
           registry_token: ${{ github.token }}
           pr_event_number: ${{ github.event.number }}
-          build_opts: "-v"
 
           # enabled by default, disable if your image is small and you want faster builds
           maximize_build_space: true
