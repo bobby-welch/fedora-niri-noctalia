@@ -1,43 +1,61 @@
-# BlueBuild Template &nbsp; [![bluebuild build badge](https://github.com/blue-build/template/actions/workflows/build.yml/badge.svg)](https://github.com/blue-build/template/actions/workflows/build.yml)
+# Fedora Noctalia
 
-See the [BlueBuild docs](https://blue-build.org/how-to/setup/) for quick setup instructions for setting up your own repository based on this template.
+[![Build](https://github.com/bobby-welch/fedora-noctalia/actions/workflows/build.yml/badge.svg)](https://github.com/bobby-welch/fedora-noctalia/actions/workflows/build.yml)
 
-After setup, it is recommended you update this README to describe your custom image.
+A personal Fedora 44 Atomic desktop built with [BlueBuild](https://blue-build.org/), [Niri](https://github.com/YaLTeR/niri), and [Noctalia](https://noctalia.dev/).
+
+> Experimental — physical hardware installation is not yet verified.
 
 ## Installation
 
-> [!WARNING]  
-> [This is an experimental feature](https://www.fedoraproject.org/wiki/Changes/OstreeNativeContainerStable), try at your own discretion.
+### Generate the ISO
 
-To rebase an existing atomic Fedora installation to the latest build:
-
-- First rebase to the unsigned image, to get the proper signing keys and policies installed:
-  ```
-  rpm-ostree rebase ostree-unverified-registry:ghcr.io/blue-build/template:latest
-  ```
-- Reboot to complete the rebase:
-  ```
-  systemctl reboot
-  ```
-- Then rebase to the signed image, like so:
-  ```
-  rpm-ostree rebase ostree-image-signed:docker://ghcr.io/blue-build/template:latest
-  ```
-- Reboot again to complete the installation
-  ```
-  systemctl reboot
-  ```
-
-The `latest` tag will automatically point to the latest build. That build will still always use the Fedora version specified in `recipe.yml`, so you won't get accidentally updated to the next major version.
-
-## ISO
-
-If build on Fedora Atomic, you can generate an offline ISO with the instructions available [here](https://blue-build.org/how-to/generate-iso/#_top). These ISOs cannot unfortunately be distributed on GitHub for free due to large sizes, so for public projects something else has to be used for hosting.
-
-## Verification
-
-These images are signed with [Sigstore](https://www.sigstore.dev/)'s [cosign](https://github.com/sigstore/cosign). You can verify the signature by downloading the `cosign.pub` file from this repo and running the following command:
+Requires the [BlueBuild CLI](https://blue-build.org/how-to/generate-iso/).
 
 ```bash
-cosign verify --key cosign.pub ghcr.io/blue-build/template
+sudo bluebuild generate-iso \
+  --iso-name fedora-noctalia.iso \
+  image ghcr.io/bobby-welch/fedora-noctalia:latest
+```
+
+### Write to USB
+
+Identify the USB device:
+
+```bash
+lsblk -o NAME,SIZE,MODEL,TRAN,MOUNTPOINTS
+```
+
+Unmount any mounted partitions on that device, then write the ISO:
+
+```bash
+sudo umount /dev/sdX1
+sudo dd if=fedora-noctalia.iso of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+**Warning:** Replace `/dev/sdX` with the correct whole-disk device. All data on it will be overwritten. Unmount every mounted partition before writing.
+
+### Install
+
+Boot from USB, follow the installer, and reboot.
+
+## Updates
+
+OS updates are configured to be downloaded and staged automatically for the next reboot.
+
+To update manually:
+
+```bash
+sudo bootc upgrade
+```
+
+Reboot to activate the update.
+
+## Rollback
+
+Restore the previous deployment:
+
+```bash
+sudo bootc rollback
+systemctl reboot
 ```
