@@ -53,16 +53,27 @@ modules:
         - brightnessctl
         - wl-clipboard
 
+        # Power management
+        - tuned
+        - tuned-ppd
+
+        # Storage and file integration
+        - gvfs
+        - gvfs-fuse
+        - gvfs-smb
+
   # Validate Niri configuration with the installed compositor.
   - type: script
     snippets:
       - niri validate --config /etc/niri/config.kdl
 
-  # Enable the graphical login manager.
+  # Enable login and power-management services.
   - type: systemd
     system:
       enabled:
         - greetd.service
+        - tuned.service
+        - tuned-ppd.service
 
   # Configure image signature verification for Atomic deployments.
   - type: signing
