@@ -21,6 +21,12 @@ modules:
       copr:
         - atim/starship
         - scottames/ghostty
+      files:
+        - 1password.repo
+        - brave-browser.repo
+      keys:
+        - https://downloads.1password.com/linux/keys/1password.asc
+        - https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
     install:
       packages:
         # Desktop and login
@@ -89,6 +95,10 @@ modules:
         - wget
         - yq
         - zoxide
+
+        # Third-party desktop applications
+        - 1password
+        - brave-browser
 
   # Validate Niri configuration with the installed compositor.
   - type: script
