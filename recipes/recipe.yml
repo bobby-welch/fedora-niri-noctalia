@@ -100,6 +100,15 @@ modules:
         - 1password
         - brave-browser
 
+        # Fonts
+        - rsms-inter-vf-fonts
+
+  # Install the terminal Nerd Font.
+  - type: fonts
+    fonts:
+      nerd-fonts:
+        - IosevkaTerm
+
   # Validate Niri configuration with the installed compositor.
   - type: script
     snippets:
