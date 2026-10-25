@@ -263,6 +263,11 @@ layout {
     }
 }
 
+// Require native Wayland applications; disable X11 compatibility.
+xwayland-satellite {
+    off
+}
+
 // Add lines like this to spawn processes at startup.
 // Note that running niri as a session supports xdg-desktop-autostart,
 // which may be more convenient to use.
