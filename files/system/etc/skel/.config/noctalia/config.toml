@@ -1,0 +1,3 @@
+# Use Noctalia's native authentication dialog.
+[shell]
+polkit_agent = true

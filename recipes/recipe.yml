@@ -15,15 +15,54 @@ modules:
       - source: system
         destination: /
 
-  # Core desktop and login packages.
+  # Install desktop packages and configure third-party repositories.
   - type: dnf
+    repos:
+      copr:
+        - scottames/ghostty
     install:
       packages:
-        - niri
-        - noctalia
+        # Desktop and login
         - greetd
         - greetd-selinux
+        - niri
+        - noctalia
         - tuigreet
+
+        # Authentication and secrets
+        - gnome-keyring
+        - gnome-keyring-pam
+        - polkit
+
+        # Portals
+        - xdg-desktop-portal
+        - xdg-desktop-portal-gnome
+        - xdg-desktop-portal-gtk
+
+        # Terminal
+        - ghostty
+
+        # Audio and media
+        - pipewire
+        - pipewire-alsa
+        - pipewire-pulseaudio
+        - playerctl
+        - wireplumber
+
+        # Hardware and Wayland utilities
+        - brightnessctl
+        - wl-clipboard
+
+  # Validate Niri configuration with the installed compositor.
+  - type: script
+    snippets:
+      - niri validate --config /etc/niri/config.kdl
+
+  # Enable the graphical login manager.
+  - type: systemd
+    system:
+      enabled:
+        - greetd.service
 
   # Configure image signature verification for Atomic deployments.
   - type: signing
