@@ -19,6 +19,7 @@ modules:
   - type: dnf
     repos:
       copr:
+        - atim/starship
         - scottames/ghostty
     install:
       packages:
@@ -61,6 +62,33 @@ modules:
         - gvfs
         - gvfs-fuse
         - gvfs-smb
+
+        # Desktop applications
+        - gnome-calculator
+        - nautilus
+        - swayimg
+        - zathura
+        - zathura-pdf-poppler
+
+        # Git and development
+        - chezmoi
+        - gh
+        - git
+        - git-delta
+        - git-lfs
+        - neovim
+
+        # Command-line utilities
+        - atuin
+        - bat
+        - btop
+        - eza
+        - fd-find
+        - ripgrep
+        - starship
+        - wget
+        - yq
+        - zoxide
 
   # Validate Niri configuration with the installed compositor.
   - type: script
