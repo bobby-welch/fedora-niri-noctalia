@@ -5,4 +5,4 @@ vt = 1
 # Launch Niri through niri-session for proper systemd and D-Bus integration.
 [default_session]
 command = "tuigreet --time --asterisks --remember --remember-user-session --cmd niri-session"
-user = "greeter"
+user = "greetd"
