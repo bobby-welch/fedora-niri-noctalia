@@ -15,13 +15,15 @@ modules:
       - source: system
         destination: /
 
-  # Core Wayland desktop. Session integration will be configured separately.
+  # Core desktop and login packages.
   - type: dnf
     install:
       packages:
         - niri
         - noctalia
+        - greetd
+        - greetd-selinux
+        - tuigreet
 
   # Configure image signature verification for Atomic deployments.
   - type: signing
-  
