@@ -78,26 +78,49 @@ Configure your Git name and email separately.
 
 ### SSH agent
 
-Enable the systemd SSH agent:
+Enable the systemd OpenSSH agent:
 
 ```bash
 systemctl --user enable --now ssh-agent.socket
 ```
 
-Create `~/.config/environment.d/10-ssh-agent.conf`:
-
-```ini
-SSH_AUTH_SOCK=%t/ssh-agent.socket
-```
-
-Activate the socket in your current terminal and load your key:
+Configure its socket for future logins:
 
 ```bash
-export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
-ssh-add ~/.ssh/id_ed25519
+mkdir -p ~/.config/environment.d
+printf 'SSH_AUTH_SOCK=/run/user/%s/ssh-agent.socket\n' "$(id -u)" \
+  > ~/.config/environment.d/10-ssh-agent.conf
 ```
 
-Log out and back in to make the environment configuration persistent. The private key remains passphrase-protected.
+Configure SSH to automatically cache the key after its first use. Add the following to `~/.ssh/config`:
+
+```sshconfig
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+    AddKeysToAgent yes
+```
+
+Secure the configuration:
+
+```bash
+chmod 600 ~/.ssh/config
+```
+
+Log out and back in to activate the environment configuration.
+
+On the first GitHub connection, enter your SSH key passphrase. SSH will automatically add the unlocked key to the agent for subsequent connections during that login session.
+
+Verify with:
+
+```bash
+ssh -T git@github.com
+ssh-add -l
+```
+
+The private key remains passphrase-protected. After a full logout or reboot, the key may need to be unlocked again.
 
 ### Display scaling
 
