@@ -45,6 +45,7 @@ modules:
         - xdg-desktop-portal
         - xdg-desktop-portal-gnome
         - xdg-desktop-portal-gtk
+        - xdg-user-dirs
 
         # Terminal
         - ghostty
