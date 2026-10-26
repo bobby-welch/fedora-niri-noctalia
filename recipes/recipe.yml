@@ -98,7 +98,7 @@ modules:
 
         # Third-party desktop applications
         - 1password
-        - brave-browser
+        - brave-origin
 
         # Fonts
         - rsms-inter-vf-fonts
