@@ -109,10 +109,29 @@ modules:
       nerd-fonts:
         - IosevkaTerm
 
-  # Validate Niri configuration with the installed compositor.
+  # Validate Niri and temporarily patch upstream session warning.
   - type: script
     snippets:
       - niri validate --config /etc/niri/config.kdl
+      - |
+        python3 - <<'PY'
+        from pathlib import Path
+
+        path = Path("/usr/bin/niri-session")
+        original = "    systemctl --user import-environment\n"
+        replacement = (
+            "    systemctl --user import-environment "
+            "$(printenv | cut -d'=' -f1 | tr '\\n' ' ')\n"
+        )
+
+        script = path.read_text()
+        if script.count(original) != 1:
+            raise SystemExit("Niri session changed; review compatibility patch")
+
+        path.write_text(script.replace(original, replacement))
+        print("Applied Niri environment-import compatibility patch")
+        PY
+      - bash -n /usr/bin/niri-session
 
   # Enable login and power-management services.
   - type: systemd
