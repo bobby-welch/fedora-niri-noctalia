@@ -71,6 +71,7 @@ modules:
         - gvfs-smb
 
         # Desktop applications
+        - adw-gtk3-theme
         - gnome-calculator
         - nautilus
         - swayimg
