@@ -4,7 +4,7 @@
 
 A personal Fedora 44 Atomic desktop built with [BlueBuild](https://blue-build.org/), [Niri](https://github.com/YaLTeR/niri), and [Noctalia](https://noctalia.dev/).
 
-> Tested on a Dell XPS 13. Installer account creation remains under investigation.
+> Running on a Dell XPS 13. The Server installer variant has been tested through user-account setup; a complete installation with this variant is not yet verified.
 
 ## Installation
 
@@ -14,9 +14,12 @@ Requires the [BlueBuild CLI](https://blue-build.org/how-to/generate-iso/).
 
 ```bash
 sudo bluebuild generate-iso \
+  --variant server \
   --iso-name fedora-noctalia.iso \
   image ghcr.io/bobby-welch/fedora-noctalia:latest
 ```
+
+**Temporary installer workaround:** The default `kinoite` variant hid the user-creation screen during our initial installation. The `server` variant exposes user creation and has been tested on a Dell XPS 13 through the installer interface, without completing another installation. Revisit this workaround if the default variant is corrected.
 
 ### Write to USB
 
@@ -37,9 +40,9 @@ sudo dd if=fedora-noctalia.iso of=/dev/sdX bs=4M status=progress conv=fsync
 
 ### Install
 
-Boot from USB, follow the installer, and reboot.
+Boot from USB, follow the installer, create an administrator account, and reboot.
 
-**Known issue:** The current ISO may not prompt for account creation, leaving the installed system without a usable login. A different installer variant is being evaluated.
+**Validation status:** The Server installer boots and displays user creation. Successful account creation, first login, and installer reboot have not been tested with this variant.
 
 ## Post-install configuration
 
