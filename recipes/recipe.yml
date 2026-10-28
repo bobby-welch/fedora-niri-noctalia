@@ -87,7 +87,6 @@ modules:
         - neovim
 
         # Command-line utilities
-        - atuin
         - bat
         - btop
         - eza
