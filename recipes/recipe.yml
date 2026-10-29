@@ -93,6 +93,7 @@ modules:
         - btop
         - eza
         - fd-find
+        - fzf
         - ripgrep
         - starship
         - wget
