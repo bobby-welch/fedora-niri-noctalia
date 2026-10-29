@@ -21,6 +21,7 @@ modules:
       copr:
         - atim/starship
         - scottames/ghostty
+        - magnusrc/lazygit
       files:
         - 1password.repo
         - brave-browser.repo
@@ -84,6 +85,7 @@ modules:
         - git
         - git-delta
         - git-lfs
+        - lazygit
         - neovim
 
         # Command-line utilities
