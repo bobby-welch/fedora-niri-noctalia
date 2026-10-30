@@ -1,6 +1,6 @@
-# Fedora Noctalia
+# Fedora Niri Noctalia
 
-[![Build](https://github.com/bobby-welch/fedora-noctalia/actions/workflows/build.yml/badge.svg)](https://github.com/bobby-welch/fedora-noctalia/actions/workflows/build.yml)
+[![Build](https://github.com/bobby-welch/fedora-niri-noctalia/actions/workflows/build.yml/badge.svg)](https://github.com/bobby-welch/fedora-niri-noctalia/actions/workflows/build.yml)
 
 A personal Fedora 44 Atomic desktop built with [BlueBuild](https://blue-build.org/), [Niri](https://github.com/YaLTeR/niri), and [Noctalia](https://noctalia.dev/).
 
@@ -15,8 +15,8 @@ Requires the [BlueBuild CLI](https://blue-build.org/how-to/generate-iso/).
 ```bash
 sudo bluebuild generate-iso \
   --variant server \
-  --iso-name fedora-noctalia.iso \
-  image ghcr.io/bobby-welch/fedora-noctalia:latest
+  --iso-name fedora-niri-noctalia.iso \
+  image ghcr.io/bobby-welch/fedora-niri-noctalia:latest
 ```
 
 **Temporary installer workaround:** The default `kinoite` variant hid the user-creation screen during our initial installation. The `server` variant exposes user creation and has been tested on a Dell XPS 13 through the installer interface, without completing another installation. Revisit this workaround if the default variant is corrected.
@@ -29,14 +29,14 @@ Identify the USB device:
 lsblk -o NAME,SIZE,MODEL,TRAN,MOUNTPOINTS
 ```
 
-Unmount any mounted partitions on that device, then write the ISO:
+Unmount any mounted partitions on that device, then write the ISO. For example:
 
 ```bash
 sudo umount /dev/sdX1
-sudo dd if=fedora-noctalia.iso of=/dev/sdX bs=4M status=progress conv=fsync
+sudo dd if=fedora-niri-noctalia.iso of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
-**Warning:** Replace `/dev/sdX` with the correct whole-disk device. All data on it will be overwritten. Unmount every mounted partition before writing.
+**Warning:** Replace `/dev/sdX` with the correct whole-disk device. All data on it will be overwritten. Unmount every mounted partition before writing. The example `umount` command is only needed if that partition is mounted.
 
 ### Install
 
@@ -153,5 +153,5 @@ Restore the previous deployment:
 
 ```bash
 sudo bootc rollback
-systemctl reboot
+sudo systemctl reboot
 ```
